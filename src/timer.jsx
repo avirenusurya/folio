@@ -4,37 +4,212 @@ import { HandUnderline, IconCap, IconBook, IconDoc, useMediaQuery, COLOR_PALETTE
 
 /* Home / Timer view — live from store */
 
-function DDayPill({ d, onClick }) {
+function PencilIcon({ size = 12 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11.5 2.5 L13.5 4.5 L5 13 L2.5 13.5 L3 11 Z" />
+      <path d="M10.5 3.5 L12.5 5.5" />
+    </svg>
+  );
+}
+
+function DDayPill({ d }) {
+  const isTouch = useMediaQuery("(hover: none)");
+  const [hovered, setHovered] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
   const daysLeft = daysBetween(todayISO(), d.target);
   const isToday = daysLeft === 0;
   const urgent = daysLeft < 7 && daysLeft > 0;
   const Icon = d.icon === "cap" ? IconCap : d.icon === "book" ? IconBook : IconDoc;
+  const showPencil = isTouch || hovered || open;
+
   return (
-    <button
-      onClick={onClick}
-      className={"lift" + (isToday ? " dday-flash" : "")}
+    <div
+      ref={rootRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "10px 16px 10px 12px",
-        background: "var(--surface)", borderRadius: 999,
-        boxShadow: "var(--shadow-soft)",
-        color: (urgent || isToday) ? "var(--accent)" : "var(--ink)",
+        position: "relative",
+        alignSelf: "flex-start",
+        display: "inline-flex",
+        zIndex: open ? 20 : "auto",
       }}
     >
-      <span style={{
-        width: 26, height: 26, borderRadius: 999,
-        background: (urgent || isToday) ? "rgba(184,92,60,0.10)" : "rgba(110,90,71,0.07)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: (urgent || isToday) ? "var(--accent)" : "var(--ink-2)",
-      }}>
-        <Icon size={14} />
-      </span>
-      <span className="sans" style={{ fontSize: 14, fontWeight: 400, whiteSpace: "nowrap" }}>{d.label}</span>
-      <span style={{ color: (urgent || isToday) ? "var(--accent)" : "var(--ink-3)", fontSize: 13 }}>·</span>
-      <span className="sans tnum" style={{ fontSize: 14, fontWeight: 400, whiteSpace: "nowrap" }}>
-        {isToday ? "today" : `d − ${daysLeft}`}
-      </span>
-    </button>
+      <div
+        className={"lift" + (isToday ? " dday-flash" : "")}
+        style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "10px 16px 10px 12px",
+          background: "var(--surface)", borderRadius: 999,
+          boxShadow: "var(--shadow-soft)",
+          color: (urgent || isToday) ? "var(--accent)" : "var(--ink)",
+        }}
+      >
+        <span style={{
+          width: 26, height: 26, borderRadius: 999,
+          background: (urgent || isToday) ? "rgba(184,92,60,0.10)" : "rgba(110,90,71,0.07)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: (urgent || isToday) ? "var(--accent)" : "var(--ink-2)",
+        }}>
+          <Icon size={14} />
+        </span>
+        <span className="sans" style={{ fontSize: 14, fontWeight: 400, whiteSpace: "nowrap" }}>{d.label}</span>
+        <span style={{ color: (urgent || isToday) ? "var(--accent)" : "var(--ink-3)", fontSize: 13 }}>·</span>
+        <span className="sans tnum" style={{ fontSize: 14, fontWeight: 400, whiteSpace: "nowrap" }}>
+          {isToday ? "today" : `d − ${daysLeft}`}
+        </span>
+      </div>
+
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+        aria-label="edit d-day"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        style={{
+          position: "absolute",
+          right: 6, top: "50%", transform: "translateY(-50%)",
+          width: 24, height: 24, borderRadius: 999,
+          background: "var(--surface)",
+          color: "var(--ink-3)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: showPencil ? "0 0 0 1px rgba(110,90,71,0.12)" : "none",
+          opacity: showPencil ? 1 : 0,
+          transition: "opacity 150ms",
+          pointerEvents: showPencil ? "auto" : "none",
+        }}
+      >
+        <PencilIcon size={12} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", left: 0, top: "100%", marginTop: 8,
+          background: "var(--surface)", borderRadius: 12, boxShadow: "var(--shadow-tilt)",
+          padding: 12,
+          width: 260, maxWidth: "calc(100vw - 32px)",
+          display: "flex", flexDirection: "column", gap: 10,
+        }}>
+          <DDayForm dday={d} onClose={() => setOpen(false)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DDayForm({ dday, onClose }) {
+  const f = useFolio();
+  const isNew = !dday;
+  const today = todayISO();
+  const defaultTarget = () => toISODate(addDays(new Date(), 30));
+  const [label, setLabel] = React.useState(dday?.label || '');
+  const [target, setTarget] = React.useState(dday?.target || defaultTarget());
+  const [icon, setIcon] = React.useState(dday?.icon || "cap");
+  const [err, setErr] = React.useState('');
+
+  const submit = async () => {
+    const trimmed = label.trim();
+    if (!trimmed) { setErr("give it a label."); return; }
+    if (target < today) { setErr("target must be today or later."); return; }
+    if (isNew) await f.actions.addDDay({ label: trimmed.toLowerCase(), target, icon });
+    else await f.actions.updateDDay(dday.id, { label: trimmed.toLowerCase(), target, icon });
+    onClose();
+  };
+
+  const remove = async () => {
+    if (!dday) return;
+    if (!window.confirm("remove this d-day?")) return;
+    await f.actions.removeDDay(dday.id);
+    onClose();
+  };
+
+  const cancel = () => onClose();
+
+  return (
+    <>
+      <div className="smallcaps" style={{ color: "var(--ink-3)" }}>{isNew ? "new d-day" : "edit d-day"}</div>
+      <input
+        value={label}
+        autoFocus
+        onChange={e => { setLabel(e.target.value.toLowerCase()); setErr(''); }}
+        placeholder="e.g. mcat"
+        className="sans"
+        maxLength={60}
+        onKeyDown={e => {
+          if (e.key === "Enter") submit();
+          else if (e.key === "Escape") cancel();
+        }}
+        style={{
+          border: "none", borderBottom: "1px solid rgba(110,90,71,0.18)",
+          background: "transparent", outline: "none",
+          color: "var(--ink)", fontSize: 14, padding: "6px 4px", width: "100%",
+        }}
+      />
+      <input
+        type="date"
+        value={target}
+        min={today}
+        onChange={e => { setTarget(e.target.value); setErr(''); }}
+        onKeyDown={e => {
+          if (e.key === "Enter") submit();
+          else if (e.key === "Escape") cancel();
+        }}
+        className="sans"
+        style={{
+          border: "none", outline: "none",
+          background: "var(--surface-2)", borderRadius: 8,
+          color: "var(--ink)", fontSize: 13, padding: "8px 10px", width: "100%",
+        }}
+      />
+      <div style={{ display: "flex", gap: 8 }}>
+        {[
+          { id: "cap", Icon: IconCap },
+          { id: "book", Icon: IconBook },
+          { id: "doc", Icon: IconDoc },
+        ].map(opt => (
+          <button key={opt.id} onClick={() => setIcon(opt.id)} style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: icon === opt.id ? "var(--accent)" : "var(--surface-2)",
+            color: icon === opt.id ? "var(--surface)" : "var(--ink-2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <opt.Icon size={14} />
+          </button>
+        ))}
+      </div>
+      {err && <div className="sans" style={{ color: "var(--accent)", fontSize: 12 }}>{err}</div>}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 2 }}>
+        <div>
+          {!isNew && (
+            <button onClick={remove} className="sans" style={{ color: "var(--accent)", fontSize: 13, padding: "6px 0" }}>
+              remove
+            </button>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={cancel} className="sans" style={{ color: "var(--ink-2)", fontSize: 13, padding: "6px 10px" }}>
+            cancel
+          </button>
+          <button onClick={submit} className="sans" style={{
+            background: "var(--accent)", color: "var(--surface)",
+            borderRadius: 999, padding: "6px 16px", fontSize: 13,
+          }}>
+            {isNew ? "add" : "save"}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -249,14 +424,7 @@ function DailyGoalBar({ doneSec, goalSec }) {
 }
 
 function DDayQuickAdd() {
-  const f = useFolio();
-  const today = todayISO();
-  const defaultTarget = () => toISODate(addDays(new Date(), 30));
   const [open, setOpen] = React.useState(false);
-  const [label, setLabel] = React.useState('');
-  const [target, setTarget] = React.useState(defaultTarget);
-  const [icon, setIcon] = React.useState("cap");
-  const [err, setErr] = React.useState('');
   const rootRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -268,22 +436,8 @@ function DDayQuickAdd() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  const reset = () => {
-    setLabel(''); setTarget(defaultTarget()); setIcon("cap"); setErr('');
-  };
-
-  const submit = async () => {
-    const trimmed = label.trim();
-    if (!trimmed) { setErr("give it a label."); return; }
-    if (target < today) { setErr("target must be today or later."); return; }
-    await f.actions.addDDay({ label: trimmed.toLowerCase(), target, icon });
-    setOpen(false); reset();
-  };
-
-  const cancel = () => { setOpen(false); reset(); };
-
   return (
-    <div ref={rootRef} style={{ position: "relative", zIndex: 10, alignSelf: "flex-start" }}>
+    <div ref={rootRef} style={{ position: "relative", zIndex: open ? 20 : 10, alignSelf: "flex-start" }}>
       <button
         onClick={() => setOpen(o => !o)}
         className="lift"
@@ -310,69 +464,7 @@ function DDayQuickAdd() {
           width: 260, maxWidth: "calc(100vw - 32px)",
           display: "flex", flexDirection: "column", gap: 10,
         }}>
-          <div className="smallcaps" style={{ color: "var(--ink-3)" }}>new d-day</div>
-          <input
-            value={label}
-            autoFocus
-            onChange={e => { setLabel(e.target.value.toLowerCase()); setErr(''); }}
-            placeholder="e.g. mcat"
-            className="sans"
-            maxLength={60}
-            onKeyDown={e => {
-              if (e.key === "Enter") submit();
-              else if (e.key === "Escape") cancel();
-            }}
-            style={{
-              border: "none", borderBottom: "1px solid rgba(110,90,71,0.18)",
-              background: "transparent", outline: "none",
-              color: "var(--ink)", fontSize: 14, padding: "6px 4px", width: "100%",
-            }}
-          />
-          <input
-            type="date"
-            value={target}
-            min={today}
-            onChange={e => { setTarget(e.target.value); setErr(''); }}
-            onKeyDown={e => {
-              if (e.key === "Enter") submit();
-              else if (e.key === "Escape") cancel();
-            }}
-            className="sans"
-            style={{
-              border: "none", outline: "none",
-              background: "var(--surface-2)", borderRadius: 8,
-              color: "var(--ink)", fontSize: 13, padding: "8px 10px", width: "100%",
-            }}
-          />
-          <div style={{ display: "flex", gap: 8 }}>
-            {[
-              { id: "cap", Icon: IconCap },
-              { id: "book", Icon: IconBook },
-              { id: "doc", Icon: IconDoc },
-            ].map(opt => (
-              <button key={opt.id} onClick={() => setIcon(opt.id)} style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: icon === opt.id ? "var(--accent)" : "var(--surface-2)",
-                color: icon === opt.id ? "var(--surface)" : "var(--ink-2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                <opt.Icon size={14} />
-              </button>
-            ))}
-          </div>
-          {err && <div className="sans" style={{ color: "var(--accent)", fontSize: 12 }}>{err}</div>}
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 2 }}>
-            <button onClick={cancel} className="sans" style={{ color: "var(--ink-2)", fontSize: 13, padding: "6px 10px" }}>
-              cancel
-            </button>
-            <button onClick={submit} className="sans" style={{
-              background: "var(--accent)", color: "var(--surface)",
-              borderRadius: 999, padding: "6px 16px", fontSize: 13,
-            }}>
-              add
-            </button>
-          </div>
+          <DDayForm dday={null} onClose={() => setOpen(false)} />
         </div>
       )}
     </div>
