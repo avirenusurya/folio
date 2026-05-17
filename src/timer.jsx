@@ -50,7 +50,7 @@ function DDayPill({ d }) {
         className={"lift" + (isToday ? " dday-flash" : "")}
         style={{
           display: "flex", alignItems: "center", gap: 10,
-          padding: "10px 16px 10px 12px",
+          padding: "10px 38px 10px 12px",
           background: "var(--surface)", borderRadius: 999,
           boxShadow: "var(--shadow-soft)",
           color: (urgent || isToday) ? "var(--accent)" : "var(--ink)",
