@@ -368,6 +368,22 @@ export function FolioProvider({ children }) {
       setState(p => p ? { ...p, current: null, sessions: [data, ...p.sessions] } : p);
     },
 
+    deleteSession: async (id) => {
+      const prev = stateRef.current;
+      if (!prev) return;
+      const original = prev.sessions.find(s => s.id === id);
+      if (!original) return;
+      setState(p => p ? { ...p, sessions: p.sessions.filter(s => s.id !== id) } : p);
+      const { error } = await supabase.from('sessions').delete().eq('id', id);
+      if (error) {
+        console.error('deleteSession failed:', error);
+        setState(p => p ? {
+          ...p,
+          sessions: [...p.sessions, original].sort((a, b) => new Date(b.started_at) - new Date(a.started_at)),
+        } : p);
+      }
+    },
+
     setActiveSubject: async (id) => {
       const prev = stateRef.current;
       if (!prev) return;

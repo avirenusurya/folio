@@ -699,6 +699,104 @@ function TimerControls({ state, onPause, onResume, onEnd, onStart }) {
   return <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}><Pill onClick={onPause}>pause</Pill><Pill kind="primary" onClick={onEnd}>end session</Pill></div>;
 }
 
+const RECENT_SESSION_WINDOW_MS = 60 * 60 * 1000;
+
+function LastSessionUndo() {
+  const f = useFolio();
+  const [open, setOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+  const rootRef = React.useRef(null);
+  const [now, setNow] = React.useState(() => Date.now());
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  // refresh "recent" gate roughly every minute so the control disappears on its own
+  React.useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (f.state.current) return null;
+  const last = f.state.sessions[0];
+  if (!last) return null;
+  const endedMs = new Date(last.ended_at).getTime();
+  if (now - endedMs > RECENT_SESSION_WINDOW_MS) return null;
+  const sub = f.subjectMap[last.subject_id];
+
+  const onDelete = async () => {
+    setDeleting(true);
+    await f.actions.deleteSession(last.id);
+    setDeleting(false);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={rootRef} style={{ position: "relative", zIndex: open ? 20 : 10, marginTop: 18 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="sans"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        style={{
+          fontSize: 12, color: "var(--ink-3)",
+          background: "transparent",
+          padding: "4px 6px",
+          letterSpacing: "0.02em",
+        }}
+      >
+        last session · {sub?.name || "(removed)"} · {fmtHoursLong(last.duration_seconds)} — undo
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", left: "50%", top: "100%", marginTop: 8,
+          transform: "translateX(-50%)",
+          background: "var(--surface)", borderRadius: 12, boxShadow: "var(--shadow-tilt)",
+          padding: 14,
+          width: 240, maxWidth: "calc(100vw - 32px)",
+          display: "flex", flexDirection: "column", gap: 10,
+          textAlign: "left",
+        }}>
+          <div className="serif" style={{ fontSize: 16, color: "var(--ink)", lineHeight: 1.35 }}>
+            delete this session?
+          </div>
+          <div className="sans" style={{ fontSize: 13, color: "var(--ink-2)" }}>
+            {sub?.name || "(removed)"} · {fmtHoursLong(last.duration_seconds)}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
+            <button
+              onClick={() => setOpen(false)}
+              className="sans"
+              style={{ fontSize: 13, padding: "8px 14px", borderRadius: 999, color: "var(--ink-2)", background: "transparent" }}
+            >
+              cancel
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={deleting}
+              className="sans"
+              style={{
+                fontSize: 13, padding: "8px 16px", borderRadius: 999,
+                color: "var(--surface)", background: "var(--accent)",
+                opacity: deleting ? 0.6 : 1, cursor: deleting ? "default" : "pointer",
+              }}
+            >
+              {deleting ? "deleting…" : "delete"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TimerView({ page, setPage }) {
   const f = useFolio();
   const isCompact = useMediaQuery("(max-width: 1020px)");
@@ -894,6 +992,8 @@ export function TimerView({ page, setPage }) {
           <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 32, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7 }}>
             space pause · esc end · 1–9 switch · j journal
           </div>
+
+          <LastSessionUndo />
         </div>
       </div>
     </div>
