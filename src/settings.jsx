@@ -947,7 +947,6 @@ function ProfileSection() {
   const f = useFolio();
   const p = f.state.profile;
   const isMobile = useMediaQuery("(max-width: 640px)");
-  const [domain, setDomain] = React.useState("");
   const [handleDraft, setHandleDraft] = React.useState(p.handle);
   const [displayDraft, setDisplayDraft] = React.useState(p.display_name);
   const [handleStatus, setHandleStatus] = React.useState("");
@@ -1035,12 +1034,6 @@ function ProfileSection() {
       {children}
     </div>
   );
-  const addDomain = () => {
-    const v = domain.trim().toLowerCase();
-    if (!v || p.study_domains.includes(v)) return;
-    f.actions.setProfile({ study_domains: [...p.study_domains, v] });
-    setDomain("");
-  };
   return (
     <>
       <SectionHeader title="profile & privacy" sub="how others see you" />
@@ -1103,28 +1096,6 @@ function ProfileSection() {
         <Row label="show best week"><Toggle on={p.show_best_week} onChange={(v) => f.actions.setProfile({ show_best_week: v })} /></Row>
         <Row label="appear in &lsquo;currently studying&rsquo; count"><Toggle on={p.appear_in_currently_studying} onChange={(v) => f.actions.setProfile({ appear_in_currently_studying: v })} /></Row>
         <Row label="share my tasks with group members"><Toggle on={p.tasks_public} onChange={(v) => f.actions.setProfile({ tasks_public: v })} /></Row>
-      </div>
-      <div style={{ marginTop: 36, maxWidth: 640 }}>
-        <div className="smallcaps" style={{ color: "var(--ink-3)", marginBottom: 8 }}>Study domains</div>
-        <p className="serif" style={{ color: "var(--ink-2)", fontSize: 16, lineHeight: 1.55, marginTop: 4 }}>
-          sites you keep open while studying. you can tag them for your own records.
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
-          {p.study_domains.map(d => (
-            <span key={d} className="sans" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "var(--surface)", borderRadius: 999, fontSize: 14, boxShadow: "var(--shadow-soft)" }}>
-              {d}
-              <button onClick={() => f.actions.setProfile({ study_domains: p.study_domains.filter(x => x !== d) })} style={{ color: "var(--ink-3)", lineHeight: 1 }}>&times;</button>
-            </span>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 14, flexDirection: isMobile ? "column" : "row" }}>
-          <input value={domain} onChange={(e)=>setDomain(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") addDomain(); }}
-            placeholder="example.com" className="sans"
-            style={{ flex: 1, padding: "12px 16px", borderRadius: 12, background: "var(--surface)", boxShadow: "var(--shadow-soft)", fontSize: 14, color: "var(--ink)" }}
-          />
-          <button onClick={addDomain} className="sans" style={{ padding: "12px 22px", borderRadius: 12, background: "var(--accent)", color: "var(--surface)", fontSize: 14 }}>add</button>
-        </div>
       </div>
     </>
   );

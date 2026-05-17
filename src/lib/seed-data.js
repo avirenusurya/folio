@@ -141,7 +141,6 @@ export function makeDemoState() {
       show_best_week: true,
       appear_in_currently_studying: true,
       editor_notes_enabled: true,
-      study_domains: ["khanacademy.org", "wolframalpha.com"],
       tasks_public: false,
       onboarded_at: null,
     },

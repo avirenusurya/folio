@@ -74,7 +74,6 @@ function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorN
       show_best_week: profile.show_best_week,
       appear_in_currently_studying: profile.appear_in_currently_studying,
       editor_notes_enabled: profile.editor_notes_enabled,
-      study_domains: profile.study_domains || [],
       tasks_public: profile.tasks_public,
       onboarded_at: profile.onboarded_at,
     },
@@ -540,7 +539,7 @@ export function FolioProvider({ children }) {
     // ----- profile / preferences -----
     setProfile: async (patch) => {
       // only forward fields that exist on the DB row
-      const allowed = ['handle','display_name','avatar_url','theme','show_subjects','show_longest','show_best_week','appear_in_currently_studying','editor_notes_enabled','study_domains','tasks_public','onboarded_at'];
+      const allowed = ['handle','display_name','avatar_url','theme','show_subjects','show_longest','show_best_week','appear_in_currently_studying','editor_notes_enabled','tasks_public','onboarded_at'];
       const dbPatch = {};
       for (const k of allowed) if (k in patch) dbPatch[k] = patch[k];
       if (Object.keys(dbPatch).length === 0) return;
