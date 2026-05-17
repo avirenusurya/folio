@@ -1,0 +1,191 @@
+:root {
+  /* sepia palette */
+  --bg: #f2e6d2;
+  --bg-deep: #ecdcc4;
+  --surface: #fbf4e4;
+  --surface-2: #f7ecd6;
+  --ink: #2a1d12;
+  --ink-2: #6e5a47;
+  --ink-3: #9b8978;
+  --ink-4: #c4b39e;
+  --accent: #b85c3c;
+  --accent-deep: #8b4423;
+  --accent-soft: rgba(184, 92, 60, 0.12);
+
+  /* subject palette */
+  --sub-peach:    #e89e6d;
+  --sub-terra:    #c77b5f;
+  --sub-rose:     #b07a6e;
+  --sub-sage:     #8b9a82;
+  --sub-ochre:    #c19a3f;
+  --sub-plum:     #8b6f8e;
+
+  /* heatmap ramp */
+  --hm-0: #f4e8d8;
+  --hm-1: #f0d2b0;
+  --hm-2: #e5a87a;
+  --hm-3: #d67d52;
+  --hm-4: #b85c3c;
+
+  --shadow-soft: 0 1px 2px rgba(70, 40, 20, 0.05), 0 8px 24px rgba(70, 40, 20, 0.06);
+  --shadow-card: 0 1px 2px rgba(70, 40, 20, 0.06), 0 12px 32px rgba(70, 40, 20, 0.09);
+  --shadow-tilt: 0 2px 4px rgba(70, 40, 20, 0.07), 0 18px 38px rgba(70, 40, 20, 0.12);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  overflow-x: hidden;
+}
+
+/* paper texture + warm top vignette over a base color stop */
+.paper-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 220, 170, 0.55), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 110%, rgba(180, 130, 90, 0.07), transparent 60%),
+    var(--bg);
+}
+.paper-grain {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' seed='3'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.30  0 0 0 0 0.18  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+#app { position: relative; z-index: 2; min-height: 100vh; }
+
+/* type helpers */
+.serif { font-family: 'Instrument Serif', 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400; }
+.serif-up { font-family: 'Instrument Serif', Georgia, serif; font-style: normal; }
+.sans { font-family: 'Geist', sans-serif; }
+.mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+.smallcaps {
+  font-family: 'Geist', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 500;
+  font-size: 11px;
+}
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* shared */
+.card {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+.pill {
+  background: var(--surface);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+button { font-family: inherit; color: inherit; border: none; background: none; cursor: pointer; padding: 0; }
+input, textarea { font-family: inherit; color: inherit; border: none; background: transparent; outline: none; }
+a { color: inherit; text-decoration: none; }
+
+::selection { background: var(--accent-soft); color: var(--ink); }
+
+/* breathing colons */
+@keyframes colonBreathe {
+  0%, 100% { opacity: 0.12; }
+  50%      { opacity: 0.35; }
+}
+.colon-breathe { animation: colonBreathe 1.6s ease-in-out infinite; }
+
+/* slow ring pulse for active subject dot */
+@keyframes ringPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(184, 92, 60, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(184, 92, 60, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(184, 92, 60, 0); }
+}
+.ring-pulse { animation: ringPulse 2.4s ease-out infinite; }
+
+/* d-day flash — pulses on the target day */
+@keyframes ddayFlash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 92, 60, 0.35); }
+  50%      { box-shadow: 0 0 0 8px rgba(184, 92, 60, 0); }
+}
+.dday-flash { animation: ddayFlash 2.4s ease-out infinite; }
+
+/* dock pulse */
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.85); }
+}
+.dot-pulse { animation: dotPulse 2.2s ease-in-out infinite; }
+
+/* mount-in animations — kept minimal so static captures stay correct.
+   Entries fade only via transform; opacity stays at 1 so any cloned/SSR
+   snapshot shows the element. The transform completes in 600ms. */
+@keyframes rise {
+  from { transform: translateY(6px); }
+  to   { transform: translateY(0); }
+}
+.rise { animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > * { animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(1){ animation-delay: 0ms; }
+.stagger > *:nth-child(2){ animation-delay: 80ms; }
+.stagger > *:nth-child(3){ animation-delay: 160ms; }
+.stagger > *:nth-child(4){ animation-delay: 240ms; }
+.stagger > *:nth-child(5){ animation-delay: 320ms; }
+.stagger > *:nth-child(6){ animation-delay: 400ms; }
+.stagger > *:nth-child(7){ animation-delay: 480ms; }
+
+/* card hover lift */
+.lift { transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 250ms cubic-bezier(0.22, 1, 0.36, 1); }
+.lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+
+/* nice scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(110, 90, 71, 0.25); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* page transition (lightweight — no opacity ramp to keep static captures clean) */
+.page { animation: none; }
+
+/* onboarding tour — doodly arrow wobble */
+@keyframes doodle-wobble {
+  0%, 100% { transform: translate(0, 0) rotate(-0.6deg); }
+  33%      { transform: translate(1px, -2px) rotate(0.4deg); }
+  66%      { transform: translate(-1px, 2px) rotate(-0.3deg); }
+}
+.doodle-arrow-svg {
+  animation: doodle-wobble 3.5s ease-in-out infinite;
+  transform-origin: 12% 70%;
+}
+
+/* onboarding tour — tooltip card breathing */
+@keyframes tip-breath {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.tour-card { animation: tip-breath 3.8s ease-in-out infinite; }
+
+/* onboarding tour — subtle pulse on the highlighted target ring */
+@keyframes tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184,92,60,0.35); }
+  50%      { box-shadow: 0 0 0 10px rgba(184,92,60,0); }
+}
+.tour-pulse { animation: tour-pulse 2.2s ease-out infinite; border-radius: 14px; }
+
+/* welcome step — Folio title fade-up */
+@keyframes welcome-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.welcome-line { animation: welcome-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards; opacity: 0; }
+.welcome-line:nth-child(1) { animation-delay: 100ms; }
+.welcome-line:nth-child(2) { animation-delay: 600ms; }
+.welcome-line:nth-child(3) { animation-delay: 1100ms; }
+

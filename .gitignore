@@ -1,0 +1,13 @@
+node_modules/
+dist/
+_legacy/
+uploads/
+.claude/
+.codex/
+.agents/
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
+.vite/
