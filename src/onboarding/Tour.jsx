@@ -1,7 +1,7 @@
 import React from 'react';
 import { DoodleArrow } from './Arrow.jsx';
 import { STEPS } from './steps.js';
-import { HandUnderline } from '../shared.jsx';
+import { HandUnderline, useMediaQuery } from '../shared.jsx';
 
 /* Tour overlay — controls page navigation as the user advances.
    Renders a backdrop, a tooltip card, a doodly arrow, nav buttons, and a skip link.
@@ -15,6 +15,7 @@ import { HandUnderline } from '../shared.jsx';
 export function OnboardingTour({ setPage, onComplete, onSkip }) {
   const [idx, setIdx] = React.useState(0);
   const step = STEPS[idx];
+  const isMobile = useMediaQuery("(max-width: 760px)");
 
   // when step's page changes, navigate underlying app
   React.useEffect(() => {
@@ -85,6 +86,61 @@ export function OnboardingTour({ setPage, onComplete, onSkip }) {
           )}
         </div>
       </div>
+    );
+  }
+
+  // Mobile regular step — top-anchored sheet, no arrow.
+  // The hardcoded pixel positions in steps.js target a desktop viewport, so on
+  // phones we drop the arrow and pin the tooltip to the top instead.
+  if (isMobile) {
+    return (
+      <>
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 199,
+          background: "rgba(42, 29, 18, 0.18)",
+          pointerEvents: "none",
+        }} />
+        <div className="tour-card" style={{
+          position: "fixed", zIndex: 200,
+          top: "calc(16px + env(safe-area-inset-top, 0px))",
+          left: 16, right: 16,
+          background: "var(--surface)", borderRadius: 16,
+          boxShadow: "var(--shadow-card)",
+          padding: "20px 22px 16px",
+        }}>
+          <div className="smallcaps" style={{ color: "var(--accent)", marginBottom: 8 }}>
+            tip {idx} of {STEPS.length - 2}
+          </div>
+          <div className="serif" style={{ fontSize: 24, color: "var(--ink)", marginBottom: 8, lineHeight: 1.15 }}>
+            {step.title}
+          </div>
+          <p className="serif" style={{
+            fontSize: 15, lineHeight: 1.55, color: "var(--ink-2)", margin: "0 0 16px",
+          }}>
+            {step.text}
+          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <button onClick={back} disabled={idx === 0} className="smallcaps" style={{
+              color: idx === 0 ? "var(--ink-4)" : "var(--ink-3)", fontSize: 10,
+              padding: "8px 4px",
+            }}>
+              ← back
+            </button>
+            <button onClick={onSkip} className="smallcaps" style={{
+              color: "var(--ink-3)", fontSize: 10, padding: "8px 12px",
+            }}>
+              skip
+            </button>
+            <button onClick={next} className="lift sans" style={{
+              padding: "10px 22px", borderRadius: 999,
+              background: "var(--accent)", color: "var(--surface)",
+              fontSize: 13, boxShadow: "var(--shadow-soft)",
+            }}>
+              next →
+            </button>
+          </div>
+        </div>
+      </>
     );
   }
 

@@ -71,12 +71,15 @@ function Modal({ children, onClose }) {
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 70,
       background: "rgba(42, 29, 18, 0.30)", backdropFilter: "blur(3px)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 24,
+      display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center",
+      padding: isMobile ? 16 : 24,
+      overflowY: "auto",
     }}>
       <div onClick={(e) => e.stopPropagation()} className="card" style={{
-        width: 500, maxWidth: "100%", padding: isMobile ? "24px 20px" : "30px 34px",
+        width: 500, maxWidth: "100%", padding: isMobile ? "22px 18px" : "30px 34px",
         boxShadow: "var(--shadow-card)",
+        marginTop: isMobile ? "calc(env(safe-area-inset-top, 0px) + 8px)" : 0,
+        marginBottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 8px)" : 0,
       }}>
         {children}
       </div>
@@ -474,12 +477,17 @@ function SubjectsSection({ onAdd, onEdit }) {
 
 function DDayRow({ d, passed, onEdit, onRemove }) {
   const Icon = d.icon === "cap" ? IconCap : d.icon === "book" ? IconBook : IconDoc;
+  const isNarrow = useMediaQuery("(max-width: 480px)");
   const daysLeft = daysBetween(todayISO(), d.target);
   const isToday = daysLeft === 0;
   const date = parseISODate(d.target);
+  const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const countdown = isToday ? "today" : daysLeft > 0 ? `d − ${daysLeft}` : `d + ${-daysLeft}`;
+  const countdownColor = (isToday || (daysLeft < 7 && daysLeft > 0)) ? "var(--accent)" : "var(--ink-2)";
   return (
     <div className={"card" + (isToday ? " dday-flash" : "")} style={{
-      display: "flex", alignItems: "center", gap: 16, padding: "18px 24px",
+      display: "flex", alignItems: "center", gap: isNarrow ? 12 : 16,
+      padding: isNarrow ? "14px 16px" : "18px 24px",
       opacity: passed ? 0.55 : 1,
     }}>
       <span style={{
@@ -489,15 +497,20 @@ function DDayRow({ d, passed, onEdit, onRemove }) {
         color: "var(--ink-2)", flexShrink: 0,
       }}><Icon size={16} /></span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="serif" style={{ fontSize: 22, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.1 }}>{d.label}</div>
-        <div className="sans" style={{ color: "var(--ink-3)", fontSize: 13, marginTop: 4 }}>
-          {date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+        <div className="serif" style={{ fontSize: isNarrow ? 19 : 22, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.1 }}>{d.label}</div>
+        <div className="sans" style={{ color: "var(--ink-3)", fontSize: 13, marginTop: 4, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span>{dateLabel}</span>
+          {isNarrow && (
+            <span className="tnum" style={{ color: countdownColor }}>· {countdown}</span>
+          )}
         </div>
       </div>
-      <span className="sans tnum" style={{ color: (isToday || (daysLeft < 7 && daysLeft > 0)) ? "var(--accent)" : "var(--ink-2)", fontSize: 14, whiteSpace: "nowrap" }}>
-        {isToday ? "today" : daysLeft > 0 ? `d − ${daysLeft}` : `d + ${-daysLeft}`}
-      </span>
-      <div style={{ display: "flex", gap: 14, color: "var(--ink-3)", flexShrink: 0 }}>
+      {!isNarrow && (
+        <span className="sans tnum" style={{ color: countdownColor, fontSize: 14, whiteSpace: "nowrap" }}>
+          {countdown}
+        </span>
+      )}
+      <div style={{ display: "flex", gap: isNarrow ? 10 : 14, color: "var(--ink-3)", flexShrink: 0 }}>
         {!passed && <button onClick={() => onEdit(d)}><IconPencil size={16}/></button>}
         <button onClick={onRemove}>×</button>
       </div>
