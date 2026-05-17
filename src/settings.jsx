@@ -2,7 +2,7 @@ import React from 'react';
 import { useFolio, todayISO, toISODate, addDays, daysBetween, parseISODate } from './state.jsx';
 import { useAuth } from './auth-context.jsx';
 import { supabase } from './lib/supabase.js';
-import { IconCap, IconBook, IconDoc, IconPencil, IconArrow, Avatar, useMediaQuery } from './shared.jsx';
+import { IconCap, IconBook, IconDoc, IconPencil, IconArrow, Avatar, useMediaQuery, COLOR_PALETTE } from './shared.jsx';
 
 /* Settings — fully wired CRUD */
 
@@ -12,10 +12,6 @@ const NAV = [
   "account", "data & export",
 ];
 
-const COLOR_PALETTE = [
-  "#E89E6D", "#C77B5F", "#B07A6E", "#8B9A82", "#C19A3F", "#8B6F8E",
-  "#B85C3C", "#7E8B6F", "#A65B5B", "#7A8FA3",
-];
 const HANDLE_MIN_LENGTH = 5;
 
 function normalizeHandle(value) {

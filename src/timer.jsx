@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFolio, fmtHMS, fmtHoursLong, todayISO, daysBetween } from './state.jsx';
-import { HandUnderline, IconCap, IconBook, IconDoc, useMediaQuery } from './shared.jsx';
+import { HandUnderline, IconCap, IconBook, IconDoc, useMediaQuery, COLOR_PALETTE } from './shared.jsx';
 
 /* Home / Timer view — live from store */
 
@@ -271,6 +271,211 @@ function SubjectIndicator({ s, todaySec, active, onClick }) {
   );
 }
 
+function SubjectCapsule({ active, subjects, todayBySubject, onPick, onCreate }) {
+  const isMobile = useMediaQuery("(max-width: 560px)");
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+  const [creating, setCreating] = React.useState(false);
+  const [newName, setNewName] = React.useState('');
+  const [newColor, setNewColor] = React.useState(COLOR_PALETTE[0]);
+  const rootRef = React.useRef(null);
+  const searchRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) {
+        setOpen(false); setCreating(false); setQuery('');
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  React.useEffect(() => {
+    if (open && !creating && !isMobile) searchRef.current?.focus();
+  }, [open, creating, isMobile]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = subjects.filter(s => !q || s.name.toLowerCase().includes(q));
+  const exact = subjects.some(s => s.name.toLowerCase() === q);
+  const showCreate = q.length > 0 && !exact;
+
+  const beginCreate = () => {
+    setNewName(query.trim());
+    const used = new Set(subjects.map(s => s.color));
+    setNewColor(COLOR_PALETTE.find(c => !used.has(c)) || COLOR_PALETTE[0]);
+    setCreating(true);
+  };
+
+  const submitCreate = async () => {
+    const name = newName.trim().toLowerCase();
+    if (!name) return;
+    const created = await onCreate({ name, color: newColor });
+    if (created) onPick(created.id);
+    setOpen(false); setCreating(false); setQuery(''); setNewName('');
+  };
+
+  return (
+    <div ref={rootRef} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="lift"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 10,
+          padding: "8px 16px 8px 12px",
+          background: "var(--surface)", borderRadius: 999,
+          boxShadow: "var(--shadow-soft)",
+          color: "var(--ink)",
+          maxWidth: "min(86vw, 320px)",
+        }}
+      >
+        <span style={{
+          width: 14, height: 14, borderRadius: 999,
+          background: active ? active.color : "transparent",
+          border: active ? "none" : "1.5px dashed var(--ink-3)",
+          flexShrink: 0,
+        }} />
+        <span className="sans" style={{
+          fontSize: 14, fontWeight: 400,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          color: active ? "var(--ink)" : "var(--ink-3)",
+        }}>
+          {active ? active.name : "no subject"}
+        </span>
+        <span style={{ color: "var(--ink-3)", fontSize: 11, marginLeft: 2 }}>▾</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", left: "50%", top: "100%", marginTop: 8, zIndex: 20,
+          transform: "translateX(-50%)",
+          background: "var(--surface)", borderRadius: 12, boxShadow: "var(--shadow-tilt)",
+          padding: 10,
+          width: 260, maxWidth: "calc(100vw - 32px)",
+          display: "flex", flexDirection: "column", gap: 6,
+        }}>
+          {!creating ? (
+            <>
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="search subjects"
+                className="sans"
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    if (filtered.length > 0) { onPick(filtered[0].id); setOpen(false); setQuery(''); }
+                    else if (showCreate) beginCreate();
+                  } else if (e.key === "Escape") { setOpen(false); setQuery(''); }
+                }}
+                style={{
+                  border: "none", borderBottom: "1px solid rgba(110,90,71,0.18)",
+                  background: "transparent", outline: "none",
+                  color: "var(--ink)", fontSize: 13, padding: "6px 4px", width: "100%",
+                }}
+              />
+              <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+                {filtered.map(s => {
+                  const sec = todayBySubject[s.id] || 0;
+                  const isActive = active?.id === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => { onPick(s.id); setOpen(false); setQuery(''); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "6px", textAlign: "left", borderRadius: 6,
+                        background: isActive ? "rgba(110,90,71,0.06)" : "transparent",
+                      }}
+                    >
+                      <span style={{ width: 10, height: 10, borderRadius: 999, background: s.color, flexShrink: 0 }} />
+                      <span className="sans" style={{
+                        fontSize: 13, color: "var(--ink)", flex: 1, minWidth: 0,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      }}>{s.name}</span>
+                      {sec > 0 && (
+                        <span className="sans tnum" style={{ fontSize: 12, color: "var(--ink-3)", flexShrink: 0 }}>
+                          {fmtHoursLong(sec)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+                {filtered.length === 0 && !showCreate && (
+                  <div className="sans" style={{ fontSize: 12.5, color: "var(--ink-3)", padding: "6px" }}>no subjects yet</div>
+                )}
+              </div>
+              <button
+                onClick={beginCreate}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 6px", textAlign: "left",
+                  borderTop: filtered.length ? "1px dashed rgba(110,90,71,0.18)" : "none",
+                  marginTop: filtered.length ? 4 : 0,
+                  color: showCreate ? "var(--accent)" : "var(--ink-2)",
+                }}
+              >
+                <span style={{
+                  width: 10, height: 10, borderRadius: 999,
+                  border: `1.5px dashed ${showCreate ? "var(--accent)" : "var(--ink-3)"}`,
+                  flexShrink: 0,
+                }} />
+                <span className="sans" style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {showCreate ? `create "${query.trim()}"` : "+ new subject"}
+                </span>
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="smallcaps" style={{ color: "var(--ink-3)", marginBottom: 4 }}>new subject</div>
+              <input
+                value={newName}
+                autoFocus
+                onChange={e => setNewName(e.target.value.toLowerCase())}
+                placeholder="e.g. organic chemistry"
+                className="sans"
+                maxLength={60}
+                onKeyDown={e => {
+                  if (e.key === "Enter") submitCreate();
+                  else if (e.key === "Escape") setCreating(false);
+                }}
+                style={{
+                  border: "none", borderBottom: "1px solid rgba(110,90,71,0.18)",
+                  background: "transparent", outline: "none",
+                  color: "var(--ink)", fontSize: 14, padding: "6px 4px", width: "100%",
+                }}
+              />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 0 4px" }}>
+                {COLOR_PALETTE.map(c => (
+                  <button key={c} onClick={() => setNewColor(c)} style={{
+                    width: 22, height: 22, borderRadius: 999, background: c,
+                    outline: newColor === c ? "2px solid var(--ink)" : "none",
+                    outlineOffset: 2, border: "none",
+                  }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
+                <button onClick={() => setCreating(false)} className="sans" style={{ color: "var(--ink-2)", fontSize: 13, padding: "6px 10px" }}>
+                  cancel
+                </button>
+                <button onClick={submitCreate} className="sans" style={{
+                  background: "var(--accent)", color: "var(--surface)",
+                  borderRadius: 999, padding: "6px 16px", fontSize: 13,
+                }}>
+                  add
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TimerControls({ state, onPause, onResume, onEnd, onStart }) {
   const isMobile = useMediaQuery("(max-width: 560px)");
   const Pill = ({ kind, children, onClick }) => (
@@ -439,19 +644,31 @@ export function TimerView({ page, setPage }) {
             </div>
           )}
 
-          <div style={{ marginBottom: isMobile ? 28 : 38, width: "100%", display: "flex", justifyContent: "center", paddingInline: 18 }}><DailyGoalBar doneSec={doneSec} goalSec={goalSec} /></div>
+          <div style={{ marginBottom: isMobile ? 28 : 30, width: "100%", display: "flex", justifyContent: "center", paddingInline: 18 }}><DailyGoalBar doneSec={doneSec} goalSec={goalSec} /></div>
 
-          <div style={{ display: "flex", gap: isMobile ? "12px 22px" : 56, marginBottom: isMobile ? 38 : 56, flexWrap: "wrap", justifyContent: "center", paddingInline: 16 }}>
-            {visible.map(s => (
-              <SubjectIndicator
-                key={s.id}
-                s={s}
-                todaySec={f.todaySecondsBySubject[s.id] || 0}
-                active={s.id === (cur ? cur.subject_id : f.state.last_active_subject)}
-                onClick={() => f.actions.setActiveSubject(s.id)}
-              />
-            ))}
+          <div style={{ marginBottom: isMobile ? 32 : 28, display: "flex", justifyContent: "center", paddingInline: 16 }}>
+            <SubjectCapsule
+              active={sub}
+              subjects={f.subjectsActive}
+              todayBySubject={f.todaySecondsBySubject}
+              onPick={(id) => f.actions.setActiveSubject(id)}
+              onCreate={(payload) => f.actions.addSubject(payload)}
+            />
           </div>
+
+          {!isMobile && (
+            <div style={{ display: "flex", gap: 56, marginBottom: 56, flexWrap: "wrap", justifyContent: "center", paddingInline: 16 }}>
+              {visible.map(s => (
+                <SubjectIndicator
+                  key={s.id}
+                  s={s}
+                  todaySec={f.todaySecondsBySubject[s.id] || 0}
+                  active={s.id === (cur ? cur.subject_id : f.state.last_active_subject)}
+                  onClick={() => f.actions.setActiveSubject(s.id)}
+                />
+              ))}
+            </div>
+          )}
 
           <TimerControls
             state={state}

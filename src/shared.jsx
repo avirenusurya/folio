@@ -2,6 +2,11 @@ import React from 'react';
 
 /* Shared primitives + icons for Folio */
 
+export const COLOR_PALETTE = [
+  "#E89E6D", "#C77B5F", "#B07A6E", "#8B9A82", "#C19A3F", "#8B6F8E",
+  "#B85C3C", "#7E8B6F", "#A65B5B", "#7A8FA3",
+];
+
 export function useMediaQuery(query) {
   const getMatch = () => (
     typeof window !== "undefined" && typeof window.matchMedia === "function"

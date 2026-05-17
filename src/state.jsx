@@ -408,8 +408,9 @@ export function FolioProvider({ children }) {
       const nextSort = prev ? prev.subjects.reduce((m, s) => Math.max(m, s.sort_order ?? 0), -1) + 1 : 0;
       const row = { user_id: user.id, name, color, sort_order: nextSort };
       const { data, error } = await supabase.from('subjects').insert(row).select().single();
-      if (error) { console.error(error); return; }
+      if (error) { console.error(error); return null; }
       setState(p => p ? { ...p, subjects: [...p.subjects, data] } : p);
+      return data;
     },
 
     updateSubject: async (id, patch) => {
