@@ -313,9 +313,9 @@ export function SettingsView() {
 
   return (
     <div className="page" style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "40px 18px 130px" : "64px 48px 180px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "240px 1fr", gap: isMobile ? 34 : 56, position: "relative" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "240px 1fr", gap: isMobile ? 34 : 56, position: "relative", minWidth: 0 }}>
         {!isMobile && <div style={{ position: "absolute", left: 268, top: 0, bottom: 0, width: 1, background: "rgba(110,90,71,0.18)" }} />}
-        <aside>
+        <aside style={{ minWidth: 0 }}>
           <h1 className="serif" style={{ fontSize: isMobile ? 40 : 44, margin: 0, color: "var(--ink)" }}>settings</h1>
           <nav style={{
             marginTop: isMobile ? 22 : 38,
@@ -605,7 +605,7 @@ function PomodoroSection() {
             <Slider label="Long break"  min={5} max={60} step={1} value={p.long_break_min} unit=" min" onChange={(v) => f.actions.setPomodoro({ long_break_min: v })} />
             <Slider label="Cycles before long break" min={2} max={8} step={1} value={p.cycles_before_long} unit="" onChange={(v) => f.actions.setPomodoro({ cycles_before_long: v })} />
           </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 6, flexWrap: "wrap" }}>
             {[
               { name: "classic 25/5",  work: 25, sb: 5,  lb: 15 },
               { name: "deep 50/10",    work: 50, sb: 10, lb: 20 },
