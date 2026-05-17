@@ -248,29 +248,6 @@ function DailyGoalBar({ doneSec, goalSec }) {
   );
 }
 
-function SubjectIndicator({ s, todaySec, active, onClick }) {
-  const short = s.name.split(/\s+/)[0];
-  return (
-    <button onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "6px 4px" }}>
-      <span className={active ? "ring-pulse" : ""} style={{
-        width: 22, height: 22, borderRadius: 999, background: s.color,
-        transform: active ? "scale(1.15)" : "scale(1)",
-        transition: "transform 250ms cubic-bezier(0.22, 1, 0.36, 1)",
-        border: active ? "2px solid var(--surface)" : "none",
-        boxShadow: active ? "0 0 0 1.5px var(--accent)" : "none",
-      }} />
-      <span className="sans" style={{
-        fontSize: 16, color: active ? "var(--ink)" : "var(--ink-2)",
-        fontWeight: active ? 500 : 400, whiteSpace: "nowrap",
-      }}>{short}</span>
-      <span className="sans tnum" style={{
-        fontSize: 15, color: active ? "var(--ink-2)" : "var(--ink-3)",
-        marginLeft: 2, whiteSpace: "nowrap",
-      }}>{fmtHoursLong(todaySec)}</span>
-    </button>
-  );
-}
-
 function SubjectCapsule({ active, subjects, todayBySubject, onPick, onCreate }) {
   const isMobile = useMediaQuery("(max-width: 560px)");
   const [open, setOpen] = React.useState(false);
@@ -549,8 +526,6 @@ export function TimerView({ page, setPage }) {
 
   const onStart = () => f.actions.startSession();
 
-  const visible = f.subjectsActive.slice(0, 5);
-
   // pull today's note from today's journal — collapse whitespace, cap length
   const journalToday = f.state.journal[todayISO()];
   const noteText = (() => {
@@ -646,7 +621,7 @@ export function TimerView({ page, setPage }) {
 
           <div style={{ marginBottom: isMobile ? 28 : 30, width: "100%", display: "flex", justifyContent: "center", paddingInline: 18 }}><DailyGoalBar doneSec={doneSec} goalSec={goalSec} /></div>
 
-          <div style={{ marginBottom: isMobile ? 32 : 28, display: "flex", justifyContent: "center", paddingInline: 16 }}>
+          <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16 }}>
             <SubjectCapsule
               active={sub}
               subjects={f.subjectsActive}
@@ -655,20 +630,6 @@ export function TimerView({ page, setPage }) {
               onCreate={(payload) => f.actions.addSubject(payload)}
             />
           </div>
-
-          {!isMobile && (
-            <div style={{ display: "flex", gap: 56, marginBottom: 56, flexWrap: "wrap", justifyContent: "center", paddingInline: 16 }}>
-              {visible.map(s => (
-                <SubjectIndicator
-                  key={s.id}
-                  s={s}
-                  todaySec={f.todaySecondsBySubject[s.id] || 0}
-                  active={s.id === (cur ? cur.subject_id : f.state.last_active_subject)}
-                  onClick={() => f.actions.setActiveSubject(s.id)}
-                />
-              ))}
-            </div>
-          )}
 
           <TimerControls
             state={state}
