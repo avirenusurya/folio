@@ -765,6 +765,28 @@ export function TimerView({ page, setPage }) {
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }).toLowerCase();
 
+  // d-days: future-only, sorted by proximity (soonest first), top 3 shown on timer
+  const futureDDays = (f.state.d_days || [])
+    .filter(d => daysBetween(todayISO(), d.target) >= 0)
+    .sort((a, b) => daysBetween(todayISO(), a.target) - daysBetween(todayISO(), b.target));
+  const visibleDDays = futureDDays.slice(0, 3);
+  const moreCount = futureDDays.length - visibleDDays.length;
+
+  const MoreDDaysLink = () => moreCount > 0 ? (
+    <button
+      onClick={() => setPage("settings")}
+      className="sans"
+      style={{
+        alignSelf: "flex-start",
+        color: "var(--ink-3)", fontSize: 12,
+        padding: "2px 4px",
+        background: "transparent",
+      }}
+    >
+      {moreCount} more — settings
+    </button>
+  ) : null;
+
   const topWidgets = (
     <div className="stagger" style={{
       display: "flex",
@@ -778,7 +800,8 @@ export function TimerView({ page, setPage }) {
       padding: isCompact ? "0 18px" : 0,
     }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: isMobile ? "1 1 auto" : "0 1 280px", minWidth: 0, position: "relative", zIndex: 10 }}>
-        {f.state.d_days.filter(d => daysBetween(todayISO(), d.target) >= 0).slice(0, 3).map(d => <DDayPill key={d.id} d={d} />)}
+        {visibleDDays.map(d => <DDayPill key={d.id} d={d} />)}
+        <MoreDDaysLink />
         <DDayQuickAdd />
         <TasksPanel date={todayISO()} style={{ width: "100%" }} />
       </div>
@@ -798,7 +821,8 @@ export function TimerView({ page, setPage }) {
             position: "absolute", top: 36, left: 40,
             display: "flex", flexDirection: "column", gap: 12, zIndex: 5,
           }}>
-            {f.state.d_days.filter(d => daysBetween(todayISO(), d.target) >= 0).slice(0, 3).map(d => <DDayPill key={d.id} d={d} />)}
+            {visibleDDays.map(d => <DDayPill key={d.id} d={d} />)}
+            <MoreDDaysLink />
             <DDayQuickAdd />
             <TasksPanel date={todayISO()} />
           </div>
