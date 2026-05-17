@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFolio, fmtHMS, fmtHoursLong, todayISO, daysBetween } from './state.jsx';
+import { useFolio, fmtHMS, fmtHoursLong, todayISO, daysBetween, addDays, toISODate } from './state.jsx';
 import { HandUnderline, IconCap, IconBook, IconDoc, useMediaQuery, COLOR_PALETTE } from './shared.jsx';
 
 /* Home / Timer view — live from store */
@@ -244,6 +244,137 @@ function DailyGoalBar({ doneSec, goalSec }) {
           }} />
         )}
       </div>
+    </div>
+  );
+}
+
+function DDayQuickAdd() {
+  const f = useFolio();
+  const today = todayISO();
+  const defaultTarget = () => toISODate(addDays(new Date(), 30));
+  const [open, setOpen] = React.useState(false);
+  const [label, setLabel] = React.useState('');
+  const [target, setTarget] = React.useState(defaultTarget);
+  const [icon, setIcon] = React.useState("cap");
+  const [err, setErr] = React.useState('');
+  const rootRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const reset = () => {
+    setLabel(''); setTarget(defaultTarget()); setIcon("cap"); setErr('');
+  };
+
+  const submit = async () => {
+    const trimmed = label.trim();
+    if (!trimmed) { setErr("give it a label."); return; }
+    if (target < today) { setErr("target must be today or later."); return; }
+    await f.actions.addDDay({ label: trimmed.toLowerCase(), target, icon });
+    setOpen(false); reset();
+  };
+
+  const cancel = () => { setOpen(false); reset(); };
+
+  return (
+    <div ref={rootRef} style={{ position: "relative", zIndex: 10, alignSelf: "flex-start" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="lift"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        style={{
+          padding: "10px 18px",
+          borderRadius: 999,
+          border: "1.5px dashed rgba(110,90,71,0.35)",
+          color: "var(--ink-2)",
+          display: "inline-flex", alignItems: "center", gap: 10,
+          background: "transparent",
+        }}
+      >
+        <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+        <span className="sans" style={{ fontSize: 14, whiteSpace: "nowrap" }}>d-day</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", left: 0, top: "100%", marginTop: 8,
+          background: "var(--surface)", borderRadius: 12, boxShadow: "var(--shadow-tilt)",
+          padding: 12,
+          width: 260, maxWidth: "calc(100vw - 32px)",
+          display: "flex", flexDirection: "column", gap: 10,
+        }}>
+          <div className="smallcaps" style={{ color: "var(--ink-3)" }}>new d-day</div>
+          <input
+            value={label}
+            autoFocus
+            onChange={e => { setLabel(e.target.value.toLowerCase()); setErr(''); }}
+            placeholder="e.g. mcat"
+            className="sans"
+            maxLength={60}
+            onKeyDown={e => {
+              if (e.key === "Enter") submit();
+              else if (e.key === "Escape") cancel();
+            }}
+            style={{
+              border: "none", borderBottom: "1px solid rgba(110,90,71,0.18)",
+              background: "transparent", outline: "none",
+              color: "var(--ink)", fontSize: 14, padding: "6px 4px", width: "100%",
+            }}
+          />
+          <input
+            type="date"
+            value={target}
+            min={today}
+            onChange={e => { setTarget(e.target.value); setErr(''); }}
+            onKeyDown={e => {
+              if (e.key === "Enter") submit();
+              else if (e.key === "Escape") cancel();
+            }}
+            className="sans"
+            style={{
+              border: "none", outline: "none",
+              background: "var(--surface-2)", borderRadius: 8,
+              color: "var(--ink)", fontSize: 13, padding: "8px 10px", width: "100%",
+            }}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            {[
+              { id: "cap", Icon: IconCap },
+              { id: "book", Icon: IconBook },
+              { id: "doc", Icon: IconDoc },
+            ].map(opt => (
+              <button key={opt.id} onClick={() => setIcon(opt.id)} style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: icon === opt.id ? "var(--accent)" : "var(--surface-2)",
+                color: icon === opt.id ? "var(--surface)" : "var(--ink-2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <opt.Icon size={14} />
+              </button>
+            ))}
+          </div>
+          {err && <div className="sans" style={{ color: "var(--accent)", fontSize: 12 }}>{err}</div>}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 2 }}>
+            <button onClick={cancel} className="sans" style={{ color: "var(--ink-2)", fontSize: 13, padding: "6px 10px" }}>
+              cancel
+            </button>
+            <button onClick={submit} className="sans" style={{
+              background: "var(--accent)", color: "var(--surface)",
+              borderRadius: 999, padding: "6px 16px", fontSize: 13,
+            }}>
+              add
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -552,8 +683,9 @@ export function TimerView({ page, setPage }) {
       margin: isCompact ? "0 auto 34px" : 0,
       padding: isCompact ? "0 18px" : 0,
     }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: isMobile ? "1 1 auto" : "0 1 280px", minWidth: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: isMobile ? "1 1 auto" : "0 1 280px", minWidth: 0, position: "relative", zIndex: 10 }}>
         {f.state.d_days.filter(d => daysBetween(todayISO(), d.target) >= 0).slice(0, 3).map(d => <DDayPill key={d.id} d={d} />)}
+        <DDayQuickAdd />
         <TasksPanel date={todayISO()} style={{ width: "100%" }} />
       </div>
       <TodaysNote
@@ -573,6 +705,7 @@ export function TimerView({ page, setPage }) {
             display: "flex", flexDirection: "column", gap: 12, zIndex: 5,
           }}>
             {f.state.d_days.filter(d => daysBetween(todayISO(), d.target) >= 0).slice(0, 3).map(d => <DDayPill key={d.id} d={d} />)}
+            <DDayQuickAdd />
             <TasksPanel date={todayISO()} />
           </div>
 
