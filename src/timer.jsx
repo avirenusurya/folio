@@ -19,10 +19,12 @@ function DDayPill({ d }) {
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef(null);
 
+  const close = () => { setOpen(false); setHovered(false); };
+
   React.useEffect(() => {
     if (!open) return;
     const onDown = (e) => {
-      if (!rootRef.current?.contains(e.target)) setOpen(false);
+      if (!rootRef.current?.contains(e.target)) close();
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -100,7 +102,7 @@ function DDayPill({ d }) {
           width: 260, maxWidth: "calc(100vw - 32px)",
           display: "flex", flexDirection: "column", gap: 10,
         }}>
-          <DDayForm dday={d} onClose={() => setOpen(false)} />
+          <DDayForm dday={d} onClose={close} />
         </div>
       )}
     </div>
