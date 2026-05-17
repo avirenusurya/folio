@@ -667,37 +667,14 @@ function makeInitials(handle, display_name) {
   return c.slice(0, 2).toUpperCase();
 }
 
-function loadImageFromFile(file) {
-  const url = URL.createObjectURL(file);
-  return new Promise((resolve, reject) => {
-    const im = new Image();
-    im.onload = () => { URL.revokeObjectURL(url); resolve(im); };
-    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('could not read image')); };
-    im.src = url;
-  });
-}
-
 function canvasToJpegBlob(canvas, quality) {
   return new Promise((resolve, reject) => {
     canvas.toBlob(b => b ? resolve(b) : reject(new Error('image encode failed')), 'image/jpeg', quality);
   });
 }
 
-// Center-crops to a square, resizes to max `dim` px, encodes JPEG. Steps
-// quality down if the result is over ~100KB so the upload stays small.
-async function makeAvatarBlob(file, dim = 512) {
-  const img = await loadImageFromFile(file);
-  const side = Math.min(img.naturalWidth, img.naturalHeight);
-  const sx = (img.naturalWidth  - side) / 2;
-  const sy = (img.naturalHeight - side) / 2;
-  const target = Math.min(dim, side);
-  const canvas = document.createElement('canvas');
-  canvas.width = target; canvas.height = target;
-  const ctx = canvas.getContext('2d');
-  // Flatten transparency to white so PNG inputs don't end up muddy as JPEG.
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, target, target);
-  ctx.drawImage(img, sx, sy, side, side, 0, 0, target, target);
+// Encode canvas as JPEG, ratcheting quality down until under ~100KB.
+async function encodeUnderLimit(canvas) {
   let q = 0.82;
   let blob = await canvasToJpegBlob(canvas, q);
   while (blob.size > 100 * 1024 && q > 0.55) {
@@ -705,6 +682,172 @@ async function makeAvatarBlob(file, dim = 512) {
     blob = await canvasToJpegBlob(canvas, q);
   }
   return blob;
+}
+
+function CropModal({ file, onCancel, onSave }) {
+  const [imgEl, setImgEl] = React.useState(null);
+  const [scale, setScale] = React.useState(1);
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const dragRef = React.useRef(null);
+
+  const containerSize = 280;
+  const outputSize = 512;
+
+  React.useEffect(() => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      setImgEl(img);
+      setScale(1);
+      setOffset({ x: 0, y: 0 });
+    };
+    img.onerror = () => setError("couldn't read image");
+    img.src = url;
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  // scale=1 makes the image cover the container (CSS object-fit:cover style).
+  // Then userScale (1-4) zooms further in.
+  const baseScale = imgEl ? Math.max(containerSize / imgEl.naturalWidth, containerSize / imgEl.naturalHeight) : 1;
+  const displayedWidth  = imgEl ? imgEl.naturalWidth  * baseScale * scale : containerSize;
+  const displayedHeight = imgEl ? imgEl.naturalHeight * baseScale * scale : containerSize;
+
+  const clampOffset = (ox, oy) => {
+    const maxX = Math.max(0, (displayedWidth  - containerSize) / 2);
+    const maxY = Math.max(0, (displayedHeight - containerSize) / 2);
+    return {
+      x: Math.max(-maxX, Math.min(maxX, ox)),
+      y: Math.max(-maxY, Math.min(maxY, oy)),
+    };
+  };
+
+  // Re-clamp offset when scale changes — zooming out shrinks the valid range.
+  React.useEffect(() => {
+    setOffset((prev) => clampOffset(prev.x, prev.y));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scale, imgEl]);
+
+  const onPointerDown = (e) => {
+    if (busy || !imgEl) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { startX: e.clientX - offset.x, startY: e.clientY - offset.y };
+    setDragging(true);
+  };
+  const onPointerMove = (e) => {
+    if (!dragRef.current) return;
+    setOffset(clampOffset(e.clientX - dragRef.current.startX, e.clientY - dragRef.current.startY));
+  };
+  const onPointerUp = (e) => {
+    dragRef.current = null;
+    setDragging(false);
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+
+  const handleSave = async () => {
+    if (!imgEl || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const totalScale = baseScale * scale;
+      const imageLeft = (containerSize - displayedWidth)  / 2 + offset.x;
+      const imageTop  = (containerSize - displayedHeight) / 2 + offset.y;
+      const sx = -imageLeft / totalScale;
+      const sy = -imageTop  / totalScale;
+      const sSize = containerSize / totalScale;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, outputSize, outputSize);
+      ctx.drawImage(imgEl, sx, sy, sSize, sSize, 0, 0, outputSize, outputSize);
+
+      const blob = await encodeUnderLimit(canvas);
+      await onSave(blob);
+      // Parent unmounts the modal on success.
+    } catch (e) {
+      console.error('crop save failed:', e);
+      setError(e.message || "save failed");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal onClose={busy ? () => {} : onCancel}>
+      <div className="smallcaps" style={{ color: "var(--accent)", marginBottom: 16 }}>
+        Crop your photo
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          style={{
+            width: containerSize, height: containerSize,
+            borderRadius: "50%",
+            overflow: "hidden",
+            background: "var(--surface-2)",
+            position: "relative",
+            touchAction: "none",
+            cursor: imgEl ? (dragging ? "grabbing" : "grab") : "default",
+            boxShadow: "0 0 0 1px rgba(110,90,71,0.18)",
+          }}
+        >
+          {imgEl && (
+            <img
+              src={imgEl.src}
+              alt=""
+              draggable={false}
+              style={{
+                position: "absolute",
+                width: displayedWidth, height: displayedHeight,
+                left: (containerSize - displayedWidth)  / 2 + offset.x,
+                top:  (containerSize - displayedHeight) / 2 + offset.y,
+                userSelect: "none",
+                pointerEvents: "none",
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: error ? 10 : 22 }}>
+        <div className="smallcaps" style={{ color: "var(--ink-3)", marginBottom: 8 }}>Zoom</div>
+        <input
+          type="range" min="1" max="4" step="0.01"
+          value={scale}
+          onChange={(e) => setScale(Number(e.target.value))}
+          disabled={busy || !imgEl}
+          style={{ width: "100%", accentColor: "var(--accent)" }}
+        />
+      </div>
+
+      {error && (
+        <div className="sans" style={{ color: "var(--accent)", fontSize: 13, marginBottom: 14 }}>{error}</div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+        <button onClick={onCancel} disabled={busy} className="sans"
+          style={{ padding: "10px 22px", borderRadius: 999, color: "var(--ink-2)", fontSize: 14, opacity: busy ? 0.5 : 1 }}>
+          cancel
+        </button>
+        <button onClick={handleSave} disabled={busy || !imgEl} className="sans"
+          style={{
+            padding: "10px 28px", borderRadius: 999,
+            background: "var(--accent)", color: "var(--surface)", fontSize: 14,
+            opacity: (busy || !imgEl) ? 0.6 : 1,
+          }}>
+          {busy ? "saving…" : "save"}
+        </button>
+      </div>
+    </Modal>
+  );
 }
 
 function AvatarUploader() {
@@ -715,18 +858,24 @@ function AvatarUploader() {
   const inputRef = React.useRef(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [pendingFile, setPendingFile] = React.useState(null);
   const initials = makeInitials(p.handle, p.display_name);
 
   const pick = () => { if (!busy) inputRef.current?.click(); };
 
-  const onFile = async (e) => {
+  const onFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) { setError("please pick an image file"); return; }
-    setBusy(true); setError("");
+    setError("");
+    setPendingFile(file);
+  };
+
+  const uploadBlob = async (blob) => {
+    setBusy(true);
+    setError("");
     try {
-      const blob = await makeAvatarBlob(file, 512);
       const path = `${user.id}/avatar.jpg`;
       const up = await supabase.storage.from('avatars').upload(path, blob, {
         contentType: 'image/jpeg',
@@ -737,9 +886,11 @@ function AvatarUploader() {
       const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
       const url = `${pub.publicUrl}?t=${Date.now()}`;
       await f.actions.setProfile({ avatar_url: url });
+      setPendingFile(null);
     } catch (err) {
       console.error('avatar upload failed:', err);
       setError(err.message || "upload failed");
+      throw err; // bubble to CropModal so it can show + stay open
     } finally {
       setBusy(false);
     }
@@ -761,29 +912,38 @@ function AvatarUploader() {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 16 : 22, marginTop: 28, maxWidth: 640 }}>
-      <button onClick={pick} disabled={busy} title="change profile picture"
-        style={{ padding: 0, borderRadius: 999, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}>
-        <Avatar initials={initials} src={p.avatar_url} size={88} ring />
-      </button>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="smallcaps" style={{ color: "var(--ink-3)" }}>Profile picture</div>
-        <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
-          <button onClick={pick} disabled={busy} className="sans" style={{ color: "var(--accent)", fontSize: 14 }}>
-            {busy ? "uploading…" : (p.avatar_url ? "change" : "upload")}
-          </button>
-          {p.avatar_url && !busy && (
-            <button onClick={remove} className="sans" style={{ color: "var(--ink-3)", fontSize: 14 }}>
-              remove
+    <>
+      <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 16 : 22, marginTop: 28, maxWidth: 640 }}>
+        <button onClick={pick} disabled={busy} title="change profile picture"
+          style={{ padding: 0, borderRadius: 999, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}>
+          <Avatar initials={initials} src={p.avatar_url} size={88} ring />
+        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="smallcaps" style={{ color: "var(--ink-3)" }}>Profile picture</div>
+          <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+            <button onClick={pick} disabled={busy} className="sans" style={{ color: "var(--accent)", fontSize: 14 }}>
+              {busy ? "uploading…" : (p.avatar_url ? "change" : "upload")}
             </button>
-          )}
+            {p.avatar_url && !busy && (
+              <button onClick={remove} className="sans" style={{ color: "var(--ink-3)", fontSize: 14 }}>
+                remove
+              </button>
+            )}
+          </div>
+          {error
+            ? <div className="sans" style={{ color: "var(--accent)", fontSize: 12 }}>{error}</div>
+            : <div className="sans" style={{ color: "var(--ink-3)", fontSize: 12 }}>drag to position, then save</div>}
         </div>
-        {error
-          ? <div className="sans" style={{ color: "var(--accent)", fontSize: 12 }}>{error}</div>
-          : <div className="sans" style={{ color: "var(--ink-3)", fontSize: 12 }}>square crop, resized to 512px jpeg</div>}
+        <input ref={inputRef} type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
       </div>
-      <input ref={inputRef} type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
-    </div>
+      {pendingFile && (
+        <CropModal
+          file={pendingFile}
+          onCancel={() => setPendingFile(null)}
+          onSave={uploadBlob}
+        />
+      )}
+    </>
   );
 }
 
