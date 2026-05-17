@@ -301,28 +301,28 @@ function SubjectCapsule({ active, subjects, todayBySubject, onPick, onCreate }) 
         aria-haspopup="listbox"
         aria-expanded={open}
         style={{
-          display: "inline-flex", alignItems: "center", gap: 10,
-          padding: "8px 16px 8px 12px",
+          display: "inline-flex", alignItems: "center", gap: 12,
+          padding: "12px 22px 12px 18px",
           background: "var(--surface)", borderRadius: 999,
           boxShadow: "var(--shadow-soft)",
           color: "var(--ink)",
-          maxWidth: "min(86vw, 320px)",
+          maxWidth: "min(86vw, 360px)",
         }}
       >
         <span style={{
-          width: 14, height: 14, borderRadius: 999,
+          width: 18, height: 18, borderRadius: 999,
           background: active ? active.color : "transparent",
           border: active ? "none" : "1.5px dashed var(--ink-3)",
           flexShrink: 0,
         }} />
         <span className="sans" style={{
-          fontSize: 14, fontWeight: 400,
+          fontSize: 16, fontWeight: 400,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           color: active ? "var(--ink)" : "var(--ink-3)",
         }}>
           {active ? active.name : "no subject"}
         </span>
-        <span style={{ color: "var(--ink-3)", fontSize: 11, marginLeft: 2 }}>▾</span>
+        <span style={{ color: "var(--ink-3)", fontSize: 12, marginLeft: 4 }}>▾</span>
       </button>
 
       {open && (
@@ -621,7 +621,7 @@ export function TimerView({ page, setPage }) {
 
           <div style={{ marginBottom: isMobile ? 28 : 30, width: "100%", display: "flex", justifyContent: "center", paddingInline: 18 }}><DailyGoalBar doneSec={doneSec} goalSec={goalSec} /></div>
 
-          <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16 }}>
+          <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16, position: "relative", zIndex: 10 }}>
             <SubjectCapsule
               active={sub}
               subjects={f.subjectsActive}
