@@ -642,10 +642,10 @@ export function FolioProvider({ children }) {
     },
 
     // ----- habits -----
-    addHabit: async ({ name, color, target_per_week = null }) => {
+    addHabit: async ({ name, color, note = null, target_per_week = null }) => {
       const prev = stateRef.current;
       const nextSort = prev ? (prev.habits || []).reduce((m, h) => Math.max(m, h.sort_order ?? 0), -1) + 1 : 0;
-      const row = { user_id: user.id, name, color, sort_order: nextSort, target_per_week };
+      const row = { user_id: user.id, name, color, note, sort_order: nextSort, target_per_week };
       const { data, error } = await supabase.from('habits').insert(row).select().single();
       if (error) { console.error('addHabit failed:', error); return null; }
       setState(p => p ? { ...p, habits: [...p.habits, data] } : p);
@@ -653,7 +653,7 @@ export function FolioProvider({ children }) {
     },
 
     updateHabit: async (id, patch) => {
-      const allowed = ['name', 'color', 'target_per_week', 'sort_order', 'archived_at'];
+      const allowed = ['name', 'color', 'note', 'target_per_week', 'sort_order', 'archived_at'];
       const dbPatch = {};
       for (const k of allowed) if (k in patch) dbPatch[k] = patch[k];
       if (!Object.keys(dbPatch).length) return;

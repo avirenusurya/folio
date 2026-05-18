@@ -109,11 +109,11 @@ export function MockFolioProvider({ children }) {
       ...prev, tasks: prev.tasks.filter(t => t.id !== id),
     })),
 
-    addHabit: ({ name, color, target_per_week = null }) => merge(prev => {
+    addHabit: ({ name, color, note = null, target_per_week = null }) => merge(prev => {
       const nextSort = (prev.habits || []).reduce((m, h) => Math.max(m, h.sort_order ?? 0), -1) + 1;
       return {
         ...prev,
-        habits: [...(prev.habits || []), { id: 'h_' + uid(), name, color, sort_order: nextSort, target_per_week, archived_at: null, created_at: new Date().toISOString() }],
+        habits: [...(prev.habits || []), { id: 'h_' + uid(), name, color, note, sort_order: nextSort, target_per_week, archived_at: null, created_at: new Date().toISOString() }],
       };
     }),
     updateHabit: (id, patch) => merge(prev => ({ ...prev, habits: (prev.habits || []).map(h => h.id === id ? { ...h, ...patch } : h) })),
