@@ -960,13 +960,15 @@ export function TimerView({ page, setPage }) {
     } else { document.title = "Folio"; }
   }, [running, sub?.id, displaySec]);
 
+  const startMode = f.state.pomodoro?.enabled ? "pomodoro" : "stopwatch";
+
   // keyboard shortcuts
   React.useEffect(() => {
     const onKey = (e) => {
       if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
       if (e.code === "Space") {
         e.preventDefault();
-        if (!cur) f.actions.startSession();
+        if (!cur) f.actions.startSession({ mode: startMode });
         else if (cur.paused) f.actions.resumeSession();
         else f.actions.pauseSession();
       } else if (e.key === "Escape") {
@@ -984,7 +986,19 @@ export function TimerView({ page, setPage }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cur, f.subjectsActive, activeId, setPage]);
+  }, [cur, f.subjectsActive, activeId, setPage, startMode]);
+
+  // pomodoro auto-advance: when the active phase hits its target, hand off.
+  // The advance action is async (it writes the work session to DB), so guard
+  // with a ref to avoid firing the same transition twice from a stale tick.
+  const advancingRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!cur?.phase || !cur.target_seconds || cur.paused) return;
+    if (f.liveSeconds < cur.target_seconds) { advancingRef.current = false; return; }
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    f.actions.advancePomodoroPhase();
+  }, [f.liveSeconds, cur?.phase, cur?.paused, cur?.target_seconds]);
 
   const weeklyMode = !!f.state.goals.weekly_goal_mode;
   const goalSec = weeklyMode ? f.state.goals.weekly_seconds : f.state.goals.daily_seconds;
@@ -1003,7 +1017,7 @@ export function TimerView({ page, setPage }) {
     </span>
   );
 
-  const onStart = () => f.actions.startSession();
+  const onStart = () => f.actions.startSession({ mode: startMode });
 
   // pull today's note from today's journal — collapse whitespace, cap length
   const journalToday = f.state.journal[todayISO()];
@@ -1101,6 +1115,21 @@ export function TimerView({ page, setPage }) {
           <div className="serif" style={{ fontSize: isMobile ? 18 : 22, color: "var(--ink-3)", letterSpacing: "0.01em", marginBottom: isMobile ? 14 : 18, whiteSpace: "nowrap" }}>
             — {dateStr} —
           </div>
+          {cur?.phase && (() => {
+            const phaseLabel = cur.phase === 'work' ? 'work' : cur.phase === 'short_break' ? 'short break' : 'long break';
+            const cyclesTotal = f.state.pomodoro?.cycles_before_long || 4;
+            const cycleHuman = cur.phase === 'work' ? (cur.cycle_index || 0) + 1 : cur.cycle_index || 1;
+            const targetMin = Math.round((cur.target_seconds || 0) / 60);
+            return (
+              <div className="smallcaps" style={{
+                fontSize: 11, letterSpacing: "0.16em",
+                color: cur.phase === 'work' ? "var(--accent)" : "var(--ink-3)",
+                marginBottom: isMobile ? 10 : 14, textAlign: "center",
+              }}>
+                {phaseLabel} · cycle {cycleHuman} of {cyclesTotal} · {targetMin} min
+              </div>
+            );
+          })()}
 
           <div className="sans tnum" style={{
             fontSize: isMobile ? "clamp(3.2rem, 20vw, 5.2rem)" : "clamp(4rem, 12vw, 10.5rem)", fontWeight: 200,

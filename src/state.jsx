@@ -165,13 +165,17 @@ export function deriveFolio(state) {
     return map;
   })();
 
+  // Pomodoro breaks shouldn't count as study time — only credit live seconds
+  // when there's no phase, or the phase is the work phase.
+  const liveCountsAsStudy = !!state.current && (!state.current.phase || state.current.phase === 'work');
+
   const todaySecondsBySubject = (() => {
     const today = todayISO();
     const out = {};
     for (const s of (sessionsByDate[today] || [])) {
       out[s.subject_id] = (out[s.subject_id] || 0) + s.duration_seconds;
     }
-    if (state.current) {
+    if (liveCountsAsStudy) {
       out[state.current.subject_id] = (out[state.current.subject_id] || 0) + liveSeconds;
     }
     return out;
@@ -189,14 +193,14 @@ export function deriveFolio(state) {
     for (const s of state.sessions) {
       if (toISODate(new Date(s.started_at)) >= mondayIso) total += s.duration_seconds;
     }
-    if (state.current) total += liveSeconds;
+    if (liveCountsAsStudy) total += liveSeconds;
     return total;
   })();
 
   const totalSecondsBySubject = (() => {
     const out = {};
     for (const s of state.sessions) out[s.subject_id] = (out[s.subject_id] || 0) + s.duration_seconds;
-    if (state.current) out[state.current.subject_id] = (out[state.current.subject_id] || 0) + liveSeconds;
+    if (liveCountsAsStudy) out[state.current.subject_id] = (out[state.current.subject_id] || 0) + liveSeconds;
     return out;
   })();
   const totalAllSeconds = Object.values(totalSecondsBySubject).reduce((a, b) => a + b, 0);
@@ -398,15 +402,83 @@ export function FolioProvider({ children }) {
       const subject_id = prev.last_active_subject
         || prev.subjects.find(s => !s.archived && !s.deleted)?.id;
       if (!subject_id) return;
+      const pomo = prev.pomodoro;
+      const isPomo = mode === "pomodoro" && pomo?.enabled;
       const current = {
         subject_id,
         started_at: new Date().toISOString(),
         accumulated: 0,
         paused: false,
         mode,
+        ...(isPomo && {
+          phase: 'work',
+          cycle_index: 0,
+          target_seconds: pomo.work_min * 60,
+        }),
       };
       saveCurrentSession(user.id, current);
       merge({ current });
+    },
+
+    advancePomodoroPhase: async () => {
+      const prev = stateRef.current;
+      if (!prev?.current?.phase) return;
+      const cur = prev.current;
+      const pomo = prev.pomodoro;
+      if (!pomo) return;
+
+      // work phase complete -> save session, then begin break
+      if (cur.phase === 'work') {
+        const totalSec = cur.paused
+          ? (cur.accumulated || 0)
+          : (cur.accumulated || 0) + Math.floor((Date.now() - new Date(cur.started_at).getTime()) / 1000);
+
+        if (totalSec >= 5) {
+          const row = {
+            user_id: user.id,
+            subject_id: cur.subject_id,
+            started_at: new Date(Date.now() - totalSec * 1000).toISOString(),
+            ended_at: new Date().toISOString(),
+            duration_seconds: totalSec,
+            mode: 'pomodoro',
+          };
+          const { data, error } = await supabase.from('sessions').insert(row).select().single();
+          if (!error && data) {
+            setState(p => p ? { ...p, sessions: [data, ...p.sessions] } : p);
+          }
+        }
+
+        const completedCycle = (cur.cycle_index || 0) + 1;
+        const isLong = pomo.cycles_before_long > 0 && completedCycle % pomo.cycles_before_long === 0;
+        const breakSec = (isLong ? pomo.long_break_min : pomo.short_break_min) * 60;
+        const next = {
+          subject_id: cur.subject_id,
+          started_at: new Date().toISOString(),
+          accumulated: 0,
+          paused: false,
+          mode: 'pomodoro',
+          phase: isLong ? 'long_break' : 'short_break',
+          cycle_index: completedCycle,
+          target_seconds: breakSec,
+        };
+        saveCurrentSession(user.id, next);
+        setState(p => p ? { ...p, current: next } : p);
+        return;
+      }
+
+      // break complete -> begin next work phase
+      const next = {
+        subject_id: cur.subject_id,
+        started_at: new Date().toISOString(),
+        accumulated: 0,
+        paused: false,
+        mode: 'pomodoro',
+        phase: 'work',
+        cycle_index: cur.cycle_index,
+        target_seconds: pomo.work_min * 60,
+      };
+      saveCurrentSession(user.id, next);
+      setState(p => p ? { ...p, current: next } : p);
     },
 
     pauseSession: () => {
@@ -430,6 +502,14 @@ export function FolioProvider({ children }) {
       const prev = stateRef.current;
       if (!prev?.current) return;
       const cur = prev.current;
+
+      // ending a pomodoro break: just clear, no DB row
+      if (cur.phase && cur.phase !== 'work') {
+        saveCurrentSession(user.id, null);
+        merge({ current: null });
+        return;
+      }
+
       const totalSec = cur.paused
         ? (cur.accumulated || 0)
         : (cur.accumulated || 0) + Math.floor((Date.now() - new Date(cur.started_at).getTime()) / 1000);
@@ -479,10 +559,11 @@ export function FolioProvider({ children }) {
       // if a session is running, end the current one first then start fresh on new subject
       if (prev.current) {
         const cur = prev.current;
+        const isBreak = cur.phase && cur.phase !== 'work';
         const totalSec = cur.paused
           ? (cur.accumulated || 0)
           : (cur.accumulated || 0) + Math.floor((Date.now() - new Date(cur.started_at).getTime()) / 1000);
-        if (totalSec >= 5) {
+        if (!isBreak && totalSec >= 5) {
           const row = {
             user_id: user.id,
             subject_id: cur.subject_id,
