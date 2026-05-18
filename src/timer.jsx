@@ -61,7 +61,7 @@ function DDayPill({ d }) {
       >
         <span style={{
           width: 26, height: 26, borderRadius: 999,
-          background: (urgent || isToday) ? "rgba(184,92,60,0.10)" : "rgba(110,90,71,0.07)",
+          background: (urgent || isToday) ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "rgba(110,90,71,0.07)",
           display: "flex", alignItems: "center", justifyContent: "center",
           color: (urgent || isToday) ? "var(--accent)" : "var(--ink-2)",
         }}>
@@ -468,7 +468,7 @@ function GoalBar({ label, doneSec, goalSec }) {
           <div style={{
             position: "absolute", left: `calc(${pct * 100}% - 4px)`, top: "50%",
             width: 8, height: 8, borderRadius: 999, background: "var(--accent)",
-            transform: "translateY(-50%)", boxShadow: "0 0 0 4px rgba(184,92,60,0.16)",
+            transform: "translateY(-50%)", boxShadow: "0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent)",
           }} />
         )}
       </div>

@@ -152,7 +152,7 @@ function MonthDayCell({ cell, sessions, tasks, dDays, subjectMap, isSelected, is
       style={{
         textAlign: "left",
         padding: "8px 9px",
-        background: isToday ? "rgba(184, 92, 60, 0.06)" : "var(--surface)",
+        background: isToday ? "color-mix(in srgb, var(--accent) 6%, transparent)" : "var(--surface)",
         border: "1px solid rgba(110,90,71,0.10)",
         outline: isSelected ? "1.5px solid var(--accent)" : "none",
         outlineOffset: -2,
@@ -292,7 +292,7 @@ function MonthEventsListMobile({ cursorMonth, sessionsByDate, tasksByDate, dDays
                 gridTemplateColumns: "32px 60px 1fr auto",
                 alignItems: "center",
                 gap: 10,
-                background: isSelected ? "rgba(184, 92, 60, 0.10)" : "transparent",
+                background: isSelected ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                 borderBottom: "1px solid rgba(110,90,71,0.10)",
                 opacity: empty ? 0.55 : 1,
               }}

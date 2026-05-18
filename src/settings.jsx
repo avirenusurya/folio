@@ -1090,7 +1090,7 @@ function AccountSection() {
         }}>
           {signingOut ? "signing out…" : "sign out"}
         </button>
-        <div style={{ marginTop: 32, padding: "18px 22px", borderRadius: 12, border: "1px solid rgba(184,92,60,0.3)" }}>
+        <div style={{ marginTop: 32, padding: "18px 22px", borderRadius: 12, border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
           <div className="smallcaps" style={{ color: "var(--accent)", marginBottom: 6 }}>Danger</div>
           <p className="serif" style={{ color: "var(--ink-2)", fontSize: 15, lineHeight: 1.55, margin: "6px 0 14px" }}>
             deleting your account is permanent. all sessions, journal entries, and group memberships will be removed.

@@ -105,16 +105,16 @@ a { color: inherit; text-decoration: none; }
 
 /* slow ring pulse for active subject dot */
 @keyframes ringPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(184, 92, 60, 0.45); }
-  70%  { box-shadow: 0 0 0 12px rgba(184, 92, 60, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(184, 92, 60, 0); }
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  70%  { box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
 }
 .ring-pulse { animation: ringPulse 2.4s ease-out infinite; }
 
 /* d-day flash — pulses on the target day */
 @keyframes ddayFlash {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 92, 60, 0.35); }
-  50%      { box-shadow: 0 0 0 8px rgba(184, 92, 60, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent); }
+  50%      { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); }
 }
 .dday-flash { animation: ddayFlash 2.4s ease-out infinite; }
 
@@ -174,8 +174,8 @@ a { color: inherit; text-decoration: none; }
 
 /* onboarding tour — subtle pulse on the highlighted target ring */
 @keyframes tour-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(184,92,60,0.35); }
-  50%      { box-shadow: 0 0 0 10px rgba(184,92,60,0); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent); }
+  50%      { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); }
 }
 .tour-pulse { animation: tour-pulse 2.2s ease-out infinite; border-radius: 14px; }
 
