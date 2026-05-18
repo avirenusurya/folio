@@ -580,7 +580,7 @@ function SubjectCapsule({ active, subjects, todayBySubject, onPick, onCreate }) 
                   color: "var(--ink)", fontSize: 13, padding: "6px 4px", width: "100%",
                 }}
               />
-              <div style={{ maxHeight: "min(60vh, 420px)", overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
                 {filtered.map(s => {
                   const sec = todayBySubject[s.id] || 0;
                   const isActive = active?.id === s.id;
