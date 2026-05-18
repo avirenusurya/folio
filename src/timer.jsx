@@ -1182,7 +1182,7 @@ export function TimerView({ page, setPage }) {
 
           {sub && (
             <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "stretch", marginTop: 4, marginBottom: isMobile ? 34 : 56, paddingInline: 24, maxWidth: "100%" }}>
-              <span className="serif" style={{ fontSize: isMobile ? "1.45rem" : "1.7rem", color: "var(--ink)", lineHeight: 1.1, whiteSpace: "nowrap", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span className="serif" style={{ fontSize: isMobile ? "1.45rem" : "1.7rem", color: "var(--ink)", lineHeight: 1.4, whiteSpace: "nowrap", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {sub.name}
               </span>
               <div style={{ marginTop: 6 }}><HandUnderline scale width={320} color={sub.color} /></div>

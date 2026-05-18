@@ -16,26 +16,26 @@ export const FONT_PAIRS = {
     serif: "'Instrument Serif', 'EB Garamond', Georgia, serif",
     href: null,
   },
-  editorial: {
-    label: "editorial",
-    sub: "fraunces · manrope",
-    sans: "'Manrope', ui-sans-serif, system-ui, sans-serif",
-    serif: "'Fraunces', 'EB Garamond', Georgia, serif",
-    href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Manrope:wght@400;500;600&display=swap",
+  notebook: {
+    label: "notebook",
+    sub: "vollkorn · karla",
+    sans: "'Karla', ui-sans-serif, system-ui, sans-serif",
+    serif: "'Vollkorn', 'EB Garamond', Georgia, serif",
+    href: "https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400;0,500;1,400&family=Karla:wght@400;500;600&display=swap",
   },
-  classic: {
-    label: "classic",
-    sub: "eb garamond · public sans",
-    sans: "'Public Sans', ui-sans-serif, system-ui, sans-serif",
-    serif: "'EB Garamond', Georgia, serif",
-    href: "https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Public+Sans:wght@400;500;600&display=swap",
+  manuscript: {
+    label: "manuscript",
+    sub: "cormorant · ibm plex",
+    sans: "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+    serif: "'Cormorant Garamond', 'EB Garamond', Georgia, serif",
+    href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap",
   },
-  display: {
-    label: "display",
-    sub: "dm serif display · bricolage",
-    sans: "'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif",
-    serif: "'DM Serif Display', 'EB Garamond', Georgia, serif",
-    href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Bricolage+Grotesque:wght@400;500;600&display=swap",
+  almanac: {
+    label: "almanac",
+    sub: "newsreader · hanken",
+    sans: "'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif",
+    serif: "'Newsreader', 'EB Garamond', Georgia, serif",
+    href: "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600&display=swap",
   },
 };
 

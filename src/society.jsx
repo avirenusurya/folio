@@ -156,7 +156,7 @@ function LeaderRow({ rank, row, maxSeconds, isPresent, onClick, compact = false,
       </div>
       <Avatar initials={initials} src={row.avatar_url} size={mobile ? 36 : 42} />
       <div style={{ marginLeft: mobile ? 10 : 18, minWidth: 0 }}>
-        <div className="serif" style={{ fontSize: mobile ? 20 : 22, color: "var(--ink)", lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div className="serif" style={{ fontSize: mobile ? 20 : 22, color: "var(--ink)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {handle}
         </div>
         <div className="smallcaps" style={{ color: "var(--ink-3)", marginTop: 6, fontSize: 10 }}>
@@ -724,7 +724,7 @@ export function MemberProfileView({ userId, onBack }) {
       {!loading && !err && stats && (
         <div className="stagger" style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: isMobile ? 24 : 30 }}>
           <Avatar initials={initialsFor(stats.handle, stats.display_name)} src={stats.avatar_url} size={isMobile ? 76 : 96} />
-          <div className="serif" style={{ fontSize: isMobile ? 30 : 36, color: "var(--ink)", lineHeight: 1, marginTop: 18, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div className="serif" style={{ fontSize: isMobile ? 30 : 36, color: "var(--ink)", lineHeight: 1.3, marginTop: 18, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
             @{stats.handle}
           </div>
           {stats.display_name && stats.display_name !== stats.handle && (

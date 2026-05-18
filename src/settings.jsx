@@ -186,7 +186,7 @@ function SubjectCardInner({ s, totalSec, onEdit, handle }) {
       {handle}
       <span style={{ width: 16, height: 16, borderRadius: 999, background: s.color, flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="serif" style={{ fontSize: 22, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.1 }}>
+        <div className="serif" style={{ fontSize: 22, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.4 }}>
           {s.name}{s.archived ? " · archived" : ""}
         </div>
         <div className="smallcaps" style={{ color: "var(--ink-3)", marginTop: 4 }}>
@@ -492,7 +492,7 @@ function DDayRow({ d, passed, onEdit, onRemove }) {
         color: "var(--ink-2)", flexShrink: 0,
       }}><Icon size={16} /></span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="serif" style={{ fontSize: isNarrow ? 19 : 22, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.1 }}>{d.label}</div>
+        <div className="serif" style={{ fontSize: isNarrow ? 19 : 22, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.4 }}>{d.label}</div>
         <div className="sans" style={{ color: "var(--ink-3)", fontSize: 13, marginTop: 4, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <span>{dateLabel}</span>
           {isNarrow && (
