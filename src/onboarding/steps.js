@@ -42,7 +42,7 @@ export const STEPS = [
     card: { top: 72, left: 1124, width: 320 },
     arrow: { top: 288, left: 1334, rotate: 180, length: 258 },
     title: "the society.",
-    text: "join a group with friends. see who's putting in the hours. (still in build — coming soon.)",
+    text: "join a group with friends. see who's putting in the hours.",
   },
   {
     id: "settings",
