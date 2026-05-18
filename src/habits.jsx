@@ -362,7 +362,7 @@ function CadencePicker({ cadence, onChange, isMobile }) {
           >
             {o}
             {cadence === o && (
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: -6 }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: -6, display: 'flex', justifyContent: 'center' }}>
                 <HandUnderline width={Math.max(60, o.length * 12)} color="var(--accent)" />
               </div>
             )}
