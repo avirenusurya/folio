@@ -1059,7 +1059,7 @@ export function TimerView({ page, setPage }) {
 
           <div style={{ marginBottom: isMobile ? 28 : 30, width: "100%", display: "flex", justifyContent: "center", paddingInline: 18 }}><DailyGoalBar doneSec={doneSec} goalSec={goalSec} /></div>
 
-          <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16, position: "relative", zIndex: 30 }}>
+          <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16, position: "relative", zIndex: 50 }}>
             <SubjectCapsule
               active={sub}
               subjects={f.subjectsActive}
