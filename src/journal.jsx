@@ -11,21 +11,22 @@ export function JournalView() {
   const today = todayISO();
   const [selectedIso, setSelectedIso] = React.useState(today);
   const [text, setText] = React.useState(f.state.journal[today] || "");
-  const [savedAt, setSavedAt] = React.useState(null);
-  const saveTimerRef = React.useRef(null);
+  const [saving, setSaving] = React.useState(false);
 
   const isToday = selectedIso === today;
   const viewingText = isToday ? text : (f.state.journal[selectedIso] || "");
+  const persisted = f.state.journal[today] || "";
+  const dirty = isToday && text !== persisted;
 
-  React.useEffect(() => {
-    if (!isToday) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      f.actions.setJournal(today, text);
-      setSavedAt(new Date());
-    }, 600);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [text, isToday]);
+  const handleSave = async () => {
+    if (!dirty || saving) return;
+    setSaving(true);
+    try {
+      await f.actions.setJournal(today, text);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const words = (viewingText || "").trim().split(/\s+/).filter(Boolean).length;
 
@@ -107,10 +108,27 @@ export function JournalView() {
                 </div>
               )}
             </div>
-            <div className="smallcaps" style={{ color: "var(--ink-3)", marginTop: 14 }}>
-              {isToday
-                ? <>autosaved · {words} {words === 1 ? "word" : "words"}</>
-                : <>read-only · {words} {words === 1 ? "word" : "words"}</>}
+            <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div className="smallcaps" style={{ color: "var(--ink-3)" }}>
+                {isToday
+                  ? <>{dirty ? "unsaved" : "saved"} · {words} {words === 1 ? "word" : "words"}</>
+                  : <>read-only · {words} {words === 1 ? "word" : "words"}</>}
+              </div>
+              {isToday && (
+                <button
+                  onClick={handleSave}
+                  disabled={!dirty || saving}
+                  className="sans"
+                  style={{
+                    padding: "8px 20px", borderRadius: 999, fontSize: 13,
+                    background: dirty ? "var(--accent)" : "rgba(110,90,71,0.18)",
+                    color: dirty ? "var(--surface)" : "var(--ink-3)",
+                    cursor: dirty && !saving ? "pointer" : "default",
+                  }}
+                >
+                  {saving ? "saving…" : "save"}
+                </button>
+              )}
             </div>
           </div>
 
