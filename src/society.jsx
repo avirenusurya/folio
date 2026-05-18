@@ -567,7 +567,10 @@ export function SocietyView({ onOpenMember }) {
             <div className="serif" style={{ color: "var(--accent)", fontSize: 16, textAlign: "center", padding: "20px 0" }}>{boardErr}</div>
           )}
           {!boardLoading && leaderboard && leaderboard.length === 0 && (
-            <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, textAlign: "center", padding: "40px 0" }}>no sessions in this period yet.</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", padding: "40px 0" }}>
+              <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, fontStyle: "italic" }}>no sessions in this period yet.</div>
+              <div className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, opacity: 0.65, letterSpacing: "0.14em" }}>as members log time, they'll rank here</div>
+            </div>
           )}
           {leaderboard && leaderboard.map((r, i) => {
             const canKick = isOwner && !r.is_you;
@@ -778,7 +781,10 @@ export function MemberProfileView({ userId, onBack }) {
                 {dayLoading ? (
                   <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18 }}>loading…</div>
                 ) : rows.length === 0 ? (
-                  <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18 }}>no sessions on this day.</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, fontStyle: "italic" }}>no sessions on this day.</div>
+                    <div className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, opacity: 0.65, letterSpacing: "0.14em" }}>timer logs will appear here</div>
+                  </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
                     {rows.map(b => (
@@ -849,7 +855,10 @@ export function MemberProfileView({ userId, onBack }) {
               const withTime = subjects.filter(s => Number(s.total_seconds) > 0);
               if (withTime.length === 0) {
                 return (
-                  <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18 }}>no sessions yet.</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, fontStyle: "italic" }}>no sessions yet.</div>
+                    <div className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, opacity: 0.65, letterSpacing: "0.14em" }}>subjects appear when they log time</div>
+                  </div>
                 );
               }
               const maxSec = withTime[0] ? Number(withTime[0].total_seconds) : 1;

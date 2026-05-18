@@ -329,7 +329,12 @@ function MonthEventsListMobile({ cursorMonth, sessionsByDate, tasksByDate, dDays
 
 function DayDetailSessions({ iso, sessions, subjectMap, onDelete, isMobile }) {
   if (sessions.length === 0) {
-    return <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18 }}>no sessions on this day.</div>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, fontStyle: "italic" }}>no sessions on this day.</div>
+        <div className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, opacity: 0.65, letterSpacing: "0.14em" }}>timer logs will appear here</div>
+      </div>
+    );
   }
   const sorted = sessions.slice().sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
   const fmtTime = (iso) => {
@@ -566,7 +571,10 @@ export function CalendarView() {
               isMobile={isMobile}
             />
           ) : breakdown.length === 0 ? (
-            <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18 }}>no sessions on this day.</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, fontStyle: "italic" }}>no sessions on this day.</div>
+              <div className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, opacity: 0.65, letterSpacing: "0.14em" }}>timer logs will appear here</div>
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
               {breakdown.map(b => (
