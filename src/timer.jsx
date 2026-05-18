@@ -973,15 +973,18 @@ export function TimerView({ page, setPage }) {
         if (cur) f.actions.endSession();
       } else if (e.key.toLowerCase() === "j") {
         setPage("journal");
-      } else if (/^[1-9]$/.test(e.key)) {
-        const idx = parseInt(e.key, 10) - 1;
-        const target = f.subjectsActive[idx];
-        if (target) f.actions.setActiveSubject(target.id);
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        if (!f.subjectsActive.length) return;
+        e.preventDefault();
+        const curIdx = f.subjectsActive.findIndex(s => s.id === activeId);
+        const dir = e.key === "ArrowLeft" ? -1 : 1;
+        const nextIdx = curIdx < 0 ? 0 : (curIdx + dir + f.subjectsActive.length) % f.subjectsActive.length;
+        f.actions.setActiveSubject(f.subjectsActive[nextIdx].id);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cur, f.subjectsActive, setPage]);
+  }, [cur, f.subjectsActive, activeId, setPage]);
 
   const weeklyMode = !!f.state.goals.weekly_goal_mode;
   const goalSec = weeklyMode ? f.state.goals.weekly_seconds : f.state.goals.daily_seconds;
@@ -1145,7 +1148,7 @@ export function TimerView({ page, setPage }) {
 
           {/* hint row */}
           <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 32, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7, position: "relative", zIndex: 40 }}>
-            space pause · esc end · 1–9 switch · j journal · <PomodoroQuickConfig />
+            space pause · esc end · ←→ switch · j journal · <PomodoroQuickConfig />
           </div>
 
           <LastSessionUndo />
