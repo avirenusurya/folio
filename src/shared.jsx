@@ -53,6 +53,13 @@ export const IconSociety = (p) => (
     <path d="M14.5 13.6c.6-.2 1.3-.3 2-.3 2.4 0 4 1.5 4 3.7" />
   </svg>
 );
+export const IconHabits = (p) => (
+  <svg viewBox="0 0 24 24" width={p.size || 22} height={p.size || 22} {...StrokeProps}>
+    <circle cx="5" cy="12" r="2.2" />
+    <circle cx="12" cy="12" r="2.2" />
+    <circle cx="19" cy="12" r="2.2" />
+  </svg>
+);
 export const IconJournal = (p) => (
   <svg viewBox="0 0 24 24" width={p.size || 22} height={p.size || 22} {...StrokeProps}>
     <rect x="6" y="3.5" width="12" height="17" rx="1.5" />
@@ -137,6 +144,7 @@ export function Dock({ page, setPage, sessionRunning }) {
   const items = [
     { id: "timer",    icon: IconTimer,    label: "timer" },
     { id: "calendar", icon: IconCalendar, label: "calendar" },
+    { id: "habits",   icon: IconHabits,   label: "habits" },
     { id: "society",  icon: IconSociety,  label: "society" },
     { id: "journal",  icon: IconJournal,  label: "journal" },
     { id: "settings", icon: IconSettings, label: "settings" },
