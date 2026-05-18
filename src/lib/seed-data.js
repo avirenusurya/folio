@@ -150,7 +150,6 @@ export function makeDemoState() {
       daily_seconds: 3.5 * 3600,
       weekly_seconds: 24.5 * 3600,
       streak_freezes_available: 2,
-      weekly_goal_mode: false,
     },
     sessions: seedSessions(DEMO_SUBJECTS),
     journal: seedJournal(),

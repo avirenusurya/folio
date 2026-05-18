@@ -84,7 +84,6 @@ function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorN
       daily_seconds: profile.daily_goal_seconds,
       weekly_seconds: profile.weekly_goal_seconds,
       streak_freezes_available: profile.streak_freezes_available,
-      weekly_goal_mode: profile.weekly_goal_mode,
     },
     sessions: sessions || [],
     journal: Object.fromEntries((journal || []).map(j => [j.entry_date, j.content])),
@@ -172,6 +171,21 @@ export function deriveFolio(state) {
   })();
   const todayTotalSeconds = Object.values(todaySecondsBySubject).reduce((a, b) => a + b, 0);
 
+  // Monday-start week total (matches the Monday math in bestWeekSeconds below).
+  const weekTotalSeconds = (() => {
+    const today = new Date();
+    const dow = today.getDay();
+    const offset = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+    const mondayIso = toISODate(monday);
+    let total = 0;
+    for (const s of state.sessions) {
+      if (toISODate(new Date(s.started_at)) >= mondayIso) total += s.duration_seconds;
+    }
+    if (state.current) total += liveSeconds;
+    return total;
+  })();
+
   const totalSecondsBySubject = (() => {
     const out = {};
     for (const s of state.sessions) out[s.subject_id] = (out[s.subject_id] || 0) + s.duration_seconds;
@@ -232,7 +246,7 @@ export function deriveFolio(state) {
   return {
     subjectsActive, subjectsArchived, subjectMap,
     liveSeconds,
-    sessionsByDate, todaySecondsBySubject, todayTotalSeconds,
+    sessionsByDate, todaySecondsBySubject, todayTotalSeconds, weekTotalSeconds,
     totalSecondsBySubject, totalAllSeconds,
     streak, bestDaySeconds, bestWeekSeconds, bestMonthSeconds,
   };
@@ -485,7 +499,6 @@ export function FolioProvider({ children }) {
       if ('daily_seconds' in patch) dbPatch.daily_goal_seconds = patch.daily_seconds;
       if ('weekly_seconds' in patch) dbPatch.weekly_goal_seconds = patch.weekly_seconds;
       if ('streak_freezes_available' in patch) dbPatch.streak_freezes_available = patch.streak_freezes_available;
-      if ('weekly_goal_mode' in patch) dbPatch.weekly_goal_mode = patch.weekly_goal_mode;
       await mergeProfile(dbPatch);
       setState(p => p ? { ...p, goals: { ...p.goals, ...patch } } : p);
     },

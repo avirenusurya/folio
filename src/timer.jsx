@@ -446,12 +446,12 @@ function TodaysNote({ text, onClick, style }) {
   );
 }
 
-function DailyGoalBar({ doneSec, goalSec }) {
+function GoalBar({ label, doneSec, goalSec }) {
   const pct = Math.min(1, doneSec / Math.max(1, goalSec));
   return (
     <div style={{ width: 380, maxWidth: "90vw" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, gap: 12 }}>
-        <span className="smallcaps" style={{ color: "var(--ink-3)", whiteSpace: "nowrap" }}>Daily Goal</span>
+        <span className="smallcaps" style={{ color: "var(--ink-3)", whiteSpace: "nowrap" }}>{label}</span>
         <span className="sans tnum" style={{ fontSize: 13, color: "var(--ink-2)", whiteSpace: "nowrap" }}>
           {fmtHoursLong(doneSec)} / {fmtHoursLong(goalSec)} · {Math.round(pct * 100)}%
         </span>
@@ -983,6 +983,8 @@ export function TimerView({ page, setPage }) {
 
   const goalSec = f.state.goals.daily_seconds;
   const doneSec = f.todayTotalSeconds;
+  const weeklyGoalSec = f.state.goals.weekly_seconds;
+  const weeklyDoneSec = f.weekTotalSeconds;
 
   const onStart = () => f.actions.startSession();
 
@@ -1105,7 +1107,10 @@ export function TimerView({ page, setPage }) {
             </div>
           )}
 
-          <div style={{ marginBottom: isMobile ? 28 : 30, width: "100%", display: "flex", justifyContent: "center", paddingInline: 18 }}><DailyGoalBar doneSec={doneSec} goalSec={goalSec} /></div>
+          <div style={{ marginBottom: isMobile ? 28 : 30, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingInline: 18 }}>
+            <GoalBar label="Daily Goal" doneSec={doneSec} goalSec={goalSec} />
+            <GoalBar label="Weekly Goal" doneSec={weeklyDoneSec} goalSec={weeklyGoalSec} />
+          </div>
 
           <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16, position: "relative", zIndex: 50 }}>
             <SubjectCapsule

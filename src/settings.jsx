@@ -571,10 +571,6 @@ function GoalsSection() {
           you receive two freezes per week. they auto-protect a missed day, quietly. you currently have <span style={{ color: "var(--ink)" }}>{f.state.goals.streak_freezes_available} available</span>.
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 560, marginTop: 24 }}>
-        <span className="sans" style={{ fontSize: 16, color: "var(--ink)" }}>use weekly goal mode</span>
-        <Toggle on={f.state.goals.weekly_goal_mode} onChange={(v) => f.actions.setGoals({ weekly_goal_mode: v })} />
-      </div>
     </>
   );
 }
