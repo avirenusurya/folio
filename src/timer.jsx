@@ -379,14 +379,62 @@ export function TasksPanel({ date, card = true, style }) {
   );
 }
 
+const TODAYS_NOTE_COLLAPSED_KEY = "folio.todaysNoteCollapsed";
+
 function TodaysNote({ text, onClick, style }) {
+  const [collapsed, setCollapsed] = React.useState(() => {
+    try { return localStorage.getItem(TODAYS_NOTE_COLLAPSED_KEY) === "1"; } catch (e) { return false; }
+  });
+  const setCollapsedPersisted = (next) => {
+    setCollapsed(next);
+    try { localStorage.setItem(TODAYS_NOTE_COLLAPSED_KEY, next ? "1" : "0"); } catch (e) {}
+  };
+
+  if (collapsed) {
+    return (
+      <button
+        onClick={() => setCollapsedPersisted(false)}
+        className="lift smallcaps"
+        aria-label="show today’s note"
+        style={{
+          background: "var(--surface)", borderRadius: 999, boxShadow: "var(--shadow-soft)",
+          padding: "8px 14px", transform: "rotate(0.6deg)",
+          color: "var(--accent)", fontSize: 11,
+          display: "inline-flex", alignItems: "center", gap: 6,
+          ...style,
+        }}
+      >
+        today’s note <span style={{ color: "var(--ink-3)", fontSize: 10 }}>▸</span>
+      </button>
+    );
+  }
+
   return (
-    <button onClick={onClick} className="lift" style={{
-      background: "var(--surface)", borderRadius: 14, boxShadow: "var(--shadow-tilt)",
-      padding: "18px 22px 20px", transform: "rotate(0.6deg)", width: 280,
-      textAlign: "left", display: "block",
-      ...style,
-    }}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); } }}
+      className="lift"
+      style={{
+        background: "var(--surface)", borderRadius: 14, boxShadow: "var(--shadow-tilt)",
+        padding: "18px 22px 20px", transform: "rotate(0.6deg)", width: 280,
+        textAlign: "left", display: "block", position: "relative", cursor: "pointer",
+        ...style,
+      }}
+    >
+      <button
+        aria-label="hide today’s note"
+        onClick={(e) => { e.stopPropagation(); setCollapsedPersisted(true); }}
+        style={{
+          position: "absolute", top: 8, right: 10,
+          width: 22, height: 22, borderRadius: 999,
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          color: "var(--ink-3)", fontSize: 14, lineHeight: 1,
+        }}
+      >
+        −
+      </button>
       <div className="smallcaps" style={{ color: "var(--accent)", marginBottom: 8 }}>Today’s Note</div>
       <div className="serif" style={{
         fontSize: 19, lineHeight: 1.45, color: "var(--ink)",
@@ -394,7 +442,7 @@ function TodaysNote({ text, onClick, style }) {
       }}>
         {text}
       </div>
-    </button>
+    </div>
   );
 }
 
