@@ -347,69 +347,6 @@ function JoinGroupModal({ open, onClose, onJoined }) {
   );
 }
 
-function GroupOptionsModal({ open, onClose, group, onLeft }) {
-  const { actions } = useFolio();
-  const [busy, setBusy] = React.useState(false);
-  const [copied, setCopied] = React.useState(false);
-
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(group.invite_code); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
-  };
-
-  const leave = async () => {
-    const msg = group.my_role === 'owner'
-      ? `leave "${group.name}"? as owner, ownership will pass to the next-oldest member. if you're the last one, the group is deleted.`
-      : `leave "${group.name}"?`;
-    if (!confirm(msg)) return;
-    setBusy(true);
-    try {
-      await actions.leaveGroup(group.id);
-      onLeft?.();
-      onClose();
-    } catch (e) {
-      alert(e.message || "couldn't leave");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Modal open={open} onClose={onClose} title={group?.name || ""}>
-      {group && (
-        <>
-          <div className="smallcaps" style={{ color: "var(--ink-3)", marginBottom: 6, fontSize: 10 }}>invite code — share to invite friends</div>
-          <button onClick={copy} className="lift" style={{
-            width: "100%", padding: "14px 18px", borderRadius: 12,
-            background: "var(--surface-2, var(--surface))",
-            border: "1px solid rgba(110,90,71,0.2)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            fontFamily: "'Instrument Serif', serif", fontSize: 22, color: "var(--ink)",
-            letterSpacing: "0.25em",
-          }}>
-            <span>{group.invite_code}</span>
-            <span className="smallcaps" style={{ color: copied ? "var(--accent)" : "var(--ink-3)", fontSize: 9, letterSpacing: "0.18em" }}>
-              {copied ? "copied" : "copy"}
-            </span>
-          </button>
-
-          <div className="sans" style={{ color: "var(--ink-3)", marginTop: 18, fontSize: 13 }}>
-            {group.member_count} {group.member_count === 1 ? "member" : "members"} · you're {group.my_role === 'owner' ? "the owner" : "a member"}
-          </div>
-
-          <div style={{ marginTop: 26, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={leave} disabled={busy} className="smallcaps" style={{
-              color: "var(--accent)", fontSize: 11, padding: "8px 0",
-            }}>
-              {busy ? "leaving…" : "leave group"}
-            </button>
-            <button onClick={onClose} className="lift sans" style={primaryBtn}>done</button>
-          </div>
-        </>
-      )}
-    </Modal>
-  );
-}
-
 function KickableRow({ row, handle, onKick }) {
   const [hover, setHover] = React.useState(false);
   return (
@@ -449,10 +386,28 @@ export function SocietyView({ onOpenMember }) {
   const [leaderboard, setLeaderboard] = React.useState(null);
   const [boardErr, setBoardErr] = React.useState(null);
   const [boardLoading, setBoardLoading] = React.useState(false);
-  const [modal, setModal] = React.useState(null); // 'create' | 'join' | 'options' | null
+  const [modal, setModal] = React.useState(null); // 'create' | 'join' | null
   const [inviteCopied, setInviteCopied] = React.useState(false);
+  const [leaving, setLeaving] = React.useState(false);
   const copyInvite = async (code) => {
     try { await navigator.clipboard.writeText(code); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); } catch {}
+  };
+  const leaveSelectedGroup = async () => {
+    const g = groups.find(x => x.id === groupId);
+    if (!g) return;
+    const msg = g.my_role === 'owner'
+      ? `leave "${g.name}"? as owner, ownership will pass to the next-oldest member. if you're the last one, the group is deleted.`
+      : `leave "${g.name}"?`;
+    if (!confirm(msg)) return;
+    setLeaving(true);
+    try {
+      await actions.leaveGroup(g.id);
+      setGroupId(null);
+    } catch (e) {
+      alert(e.message || "couldn't leave");
+    } finally {
+      setLeaving(false);
+    }
   };
 
   const shouldBroadcast = !!(
@@ -578,8 +533,13 @@ export function SocietyView({ onOpenMember }) {
               </span>
             </button>
             <span>·</span>
-            <button onClick={() => setModal('options')} className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, padding: "2px 6px" }}>
-              options
+            <button
+              onClick={leaveSelectedGroup}
+              disabled={leaving}
+              className="smallcaps"
+              style={{ color: "var(--accent)", fontSize: 10, padding: "2px 6px", opacity: leaving ? 0.5 : 1 }}
+            >
+              {leaving ? "leaving…" : "leave"}
             </button>
           </div>
         )}
@@ -646,7 +606,6 @@ export function SocietyView({ onOpenMember }) {
 
       <CreateGroupModal open={modal === 'create'} onClose={() => setModal(null)} onCreated={(g) => setGroupId(g.id)} />
       <JoinGroupModal   open={modal === 'join'}   onClose={() => setModal(null)} onJoined={(g) => setGroupId(g.id)} />
-      <GroupOptionsModal open={modal === 'options'} onClose={() => setModal(null)} group={selectedGroup} onLeft={() => setGroupId(null)} />
     </div>
   );
 }
