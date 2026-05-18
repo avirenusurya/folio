@@ -156,6 +156,8 @@ export function makeDemoState() {
     journal: seedJournal(),
     editor_notes: seedEditorNotes(),
     tasks: seedTasks(),
+    habits: [],
+    habit_entries: [],
     pomodoro: { enabled: false, work_min: 25, short_break_min: 5, long_break_min: 15, cycles_before_long: 4 },
     current: null,
     last_active_subject: "s_chem",

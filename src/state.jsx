@@ -61,7 +61,7 @@ function shapeGroup(row, userId) {
 }
 
 // --- DB row → client state slices ----------------------------------------
-function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorNotes, tasks, groups }, userId) {
+function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorNotes, tasks, groups, habits, habitEntries }, userId) {
   return {
     profile: {
       handle: profile.handle,
@@ -80,6 +80,8 @@ function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorN
     subjects: subjects || [],
     d_days: dDays || [],
     tasks: tasks || [],
+    habits: habits || [],
+    habit_entries: habitEntries || [],
     goals: {
       daily_seconds: profile.daily_goal_seconds,
       weekly_seconds: profile.weekly_goal_seconds,
@@ -103,7 +105,7 @@ function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorN
 }
 
 async function loadAllForUser(userId) {
-  const [profileRes, subjectsRes, sessionsRes, ddaysRes, journalRes, notesRes, tasksRes, groupsRes] = await Promise.all([
+  const [profileRes, subjectsRes, sessionsRes, ddaysRes, journalRes, notesRes, tasksRes, groupsRes, habitsRes, habitEntriesRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('user_id', userId).single(),
     supabase.from('subjects').select('*').eq('user_id', userId).order('sort_order').order('created_at'),
     supabase.from('sessions').select('*').eq('user_id', userId).order('started_at', { ascending: false }),
@@ -112,6 +114,8 @@ async function loadAllForUser(userId) {
     supabase.from('editor_notes').select('week_start, content').eq('user_id', userId),
     supabase.from('tasks').select('*').eq('user_id', userId).order('created_at'),
     supabase.from('groups').select('id, name, description, invite_code, created_at, members:group_members(user_id, role, joined_at)').order('created_at'),
+    supabase.from('habits').select('*').eq('user_id', userId).order('sort_order').order('created_at'),
+    supabase.from('habit_entries').select('habit_id, entry_date, status').eq('user_id', userId),
   ]);
 
   if (profileRes.error) throw profileRes.error;
@@ -125,6 +129,8 @@ async function loadAllForUser(userId) {
     editorNotes: notesRes.data,
     tasks: tasksRes.data,
     groups: groupsRes.data,
+    habits: habitsRes.data,
+    habitEntries: habitEntriesRes.data,
   }, userId);
 }
 
@@ -244,12 +250,80 @@ export function deriveFolio(state) {
     return vals.length ? Math.max(...vals) : 0;
   })();
 
+  // --- habits ------------------------------------------------------------
+  const habitsActive   = (state.habits || []).filter(h => !h.archived_at).sort(bySort);
+  const habitsArchived = (state.habits || []).filter(h =>  h.archived_at).sort(bySort);
+  const habitMap       = Object.fromEntries((state.habits || []).map(h => [h.id, h]));
+
+  // habit_id -> { entry_date: status }
+  const habitEntriesByHabit = (() => {
+    const map = {};
+    for (const e of (state.habit_entries || [])) {
+      if (!map[e.habit_id]) map[e.habit_id] = {};
+      map[e.habit_id][e.entry_date] = e.status;
+    }
+    return map;
+  })();
+
+  // entry_date -> count of 'done' entries (for insights heatmap)
+  const habitDoneCountByDate = (() => {
+    const map = {};
+    for (const e of (state.habit_entries || [])) {
+      if (e.status !== 'done') continue;
+      map[e.entry_date] = (map[e.entry_date] || 0) + 1;
+    }
+    return map;
+  })();
+
+  // per-habit stats: today status, total done, streak, current-week count
+  const habitStats = (() => {
+    const today = todayISO();
+    const out = {};
+    const monday = startOfWeek(new Date());
+    const mondayIso = toISODate(monday);
+    for (const h of (state.habits || [])) {
+      const entries = habitEntriesByHabit[h.id] || {};
+      const todayStatus = entries[today] || null;
+
+      let totalDone = 0;
+      for (const d in entries) if (entries[d] === 'done') totalDone++;
+
+      // streak: walk back from today; 'done' extends, 'skip' is neutral (rest day),
+      // missing breaks — except today itself, which is allowed to be blank
+      // (so a streak that ended yesterday still shows until today is missed at end of day).
+      let streak = 0;
+      let cursor = new Date();
+      let started = false;
+      // hard cap to avoid pathological loops if data is malformed
+      for (let i = 0; i < 3650; i++) {
+        const iso = toISODate(cursor);
+        const s = entries[iso];
+        if (s === 'done') { streak++; started = true; cursor = addDays(cursor, -1); continue; }
+        if (s === 'skip') { cursor = addDays(cursor, -1); continue; }
+        if (!started && iso === today) { cursor = addDays(cursor, -1); continue; }
+        break;
+      }
+
+      // this-week done count (Mon-start), capped at today
+      let weekDone = 0;
+      for (let i = 0; i < 7; i++) {
+        const iso = toISODate(addDays(monday, i));
+        if (iso > today) break;
+        if (entries[iso] === 'done') weekDone++;
+      }
+
+      out[h.id] = { todayStatus, totalDone, streak, weekDone, weekStartIso: mondayIso };
+    }
+    return out;
+  })();
+
   return {
     subjectsActive, subjectsArchived, subjectMap,
     liveSeconds,
     sessionsByDate, todaySecondsBySubject, todayTotalSeconds, weekTotalSeconds,
     totalSecondsBySubject, totalAllSeconds,
     streak, bestDaySeconds, bestWeekSeconds, bestMonthSeconds,
+    habitsActive, habitsArchived, habitMap, habitEntriesByHabit, habitDoneCountByDate, habitStats,
   };
 }
 
@@ -567,6 +641,103 @@ export function FolioProvider({ children }) {
       }
     },
 
+    // ----- habits -----
+    addHabit: async ({ name, color, target_per_week = null }) => {
+      const prev = stateRef.current;
+      const nextSort = prev ? (prev.habits || []).reduce((m, h) => Math.max(m, h.sort_order ?? 0), -1) + 1 : 0;
+      const row = { user_id: user.id, name, color, sort_order: nextSort, target_per_week };
+      const { data, error } = await supabase.from('habits').insert(row).select().single();
+      if (error) { console.error('addHabit failed:', error); return null; }
+      setState(p => p ? { ...p, habits: [...p.habits, data] } : p);
+      return data;
+    },
+
+    updateHabit: async (id, patch) => {
+      const allowed = ['name', 'color', 'target_per_week', 'sort_order', 'archived_at'];
+      const dbPatch = {};
+      for (const k of allowed) if (k in patch) dbPatch[k] = patch[k];
+      if (!Object.keys(dbPatch).length) return;
+      const { data, error } = await supabase.from('habits').update(dbPatch).eq('id', id).select().single();
+      if (error) { console.error('updateHabit failed:', error); return; }
+      setState(p => p ? { ...p, habits: p.habits.map(h => h.id === id ? data : h) } : p);
+    },
+
+    archiveHabit: async (id) => {
+      await actions.updateHabit(id, { archived_at: new Date().toISOString() });
+    },
+    unarchiveHabit: async (id) => {
+      await actions.updateHabit(id, { archived_at: null });
+    },
+
+    deleteHabit: async (id) => {
+      const prev = stateRef.current;
+      if (!prev) return;
+      const original = prev.habits.find(h => h.id === id);
+      const origEntries = prev.habit_entries.filter(e => e.habit_id === id);
+      setState(p => p ? {
+        ...p,
+        habits: p.habits.filter(h => h.id !== id),
+        habit_entries: p.habit_entries.filter(e => e.habit_id !== id),
+      } : p);
+      const { error } = await supabase.from('habits').delete().eq('id', id);
+      if (error) {
+        console.error('deleteHabit failed:', error);
+        if (original) setState(p => p ? {
+          ...p,
+          habits: [...p.habits, original],
+          habit_entries: [...p.habit_entries, ...origEntries],
+        } : p);
+      }
+    },
+
+    reorderHabits: async (orderedIds) => {
+      const prev = stateRef.current;
+      if (!prev) return;
+      const idToNewSort = Object.fromEntries(orderedIds.map((id, i) => [id, i]));
+      const original = prev.habits;
+      setState(p => p ? { ...p, habits: p.habits.map(h => idToNewSort[h.id] !== undefined ? { ...h, sort_order: idToNewSort[h.id] } : h) } : p);
+      const results = await Promise.all(
+        orderedIds.map((id, i) => supabase.from('habits').update({ sort_order: i }).eq('id', id))
+      );
+      const firstErr = results.find(r => r.error);
+      if (firstErr) {
+        console.error('reorderHabits failed:', firstErr.error);
+        setState(p => p ? { ...p, habits: original } : p);
+      }
+    },
+
+    toggleHabitDone: async (habit_id, entry_date) => {
+      const prev = stateRef.current;
+      if (!prev) return;
+      const existing = prev.habit_entries.find(e => e.habit_id === habit_id && e.entry_date === entry_date);
+      if (existing && existing.status === 'done') {
+        // optimistic delete
+        setState(p => p ? { ...p, habit_entries: p.habit_entries.filter(e => !(e.habit_id === habit_id && e.entry_date === entry_date)) } : p);
+        const { error } = await supabase.from('habit_entries').delete().eq('habit_id', habit_id).eq('entry_date', entry_date);
+        if (error) {
+          console.error('toggleHabitDone delete failed:', error);
+          setState(p => p ? { ...p, habit_entries: [...p.habit_entries, existing] } : p);
+        }
+      } else {
+        // optimistic insert/upsert
+        const optimistic = { habit_id, user_id: user.id, entry_date, status: 'done', created_at: new Date().toISOString() };
+        setState(p => p ? { ...p, habit_entries: existing
+          ? p.habit_entries.map(e => (e.habit_id === habit_id && e.entry_date === entry_date) ? optimistic : e)
+          : [...p.habit_entries, optimistic] } : p);
+        const { data, error } = await supabase.from('habit_entries')
+          .upsert({ habit_id, user_id: user.id, entry_date, status: 'done' }, { onConflict: 'habit_id,entry_date' })
+          .select().single();
+        if (error) {
+          console.error('toggleHabitDone insert failed:', error);
+          setState(p => p ? { ...p, habit_entries: existing
+            ? p.habit_entries.map(e => (e.habit_id === habit_id && e.entry_date === entry_date) ? existing : e)
+            : p.habit_entries.filter(e => !(e.habit_id === habit_id && e.entry_date === entry_date)) } : p);
+        } else if (data) {
+          setState(p => p ? { ...p, habit_entries: p.habit_entries.map(e => (e.habit_id === habit_id && e.entry_date === entry_date) ? data : e) } : p);
+        }
+      }
+    },
+
     // ----- profile / preferences -----
     setProfile: async (patch) => {
       // only forward fields that exist on the DB row
@@ -653,6 +824,7 @@ export function FolioProvider({ children }) {
         supabase.from('d_days').delete().eq('user_id', user.id),
         supabase.from('editor_notes').delete().eq('user_id', user.id),
         supabase.from('tasks').delete().eq('user_id', user.id),
+        supabase.from('habits').delete().eq('user_id', user.id),
       ]);
       saveCurrentSession(user.id, null);
       // re-load fresh

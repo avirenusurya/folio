@@ -109,6 +109,37 @@ export function MockFolioProvider({ children }) {
       ...prev, tasks: prev.tasks.filter(t => t.id !== id),
     })),
 
+    addHabit: ({ name, color, target_per_week = null }) => merge(prev => {
+      const nextSort = (prev.habits || []).reduce((m, h) => Math.max(m, h.sort_order ?? 0), -1) + 1;
+      return {
+        ...prev,
+        habits: [...(prev.habits || []), { id: 'h_' + uid(), name, color, sort_order: nextSort, target_per_week, archived_at: null, created_at: new Date().toISOString() }],
+      };
+    }),
+    updateHabit: (id, patch) => merge(prev => ({ ...prev, habits: (prev.habits || []).map(h => h.id === id ? { ...h, ...patch } : h) })),
+    archiveHabit: (id) => actions.updateHabit(id, { archived_at: new Date().toISOString() }),
+    unarchiveHabit: (id) => actions.updateHabit(id, { archived_at: null }),
+    deleteHabit: (id) => merge(prev => ({
+      ...prev,
+      habits: (prev.habits || []).filter(h => h.id !== id),
+      habit_entries: (prev.habit_entries || []).filter(e => e.habit_id !== id),
+    })),
+    reorderHabits: (orderedIds) => merge(prev => {
+      const idToNewSort = Object.fromEntries(orderedIds.map((id, i) => [id, i]));
+      return { ...prev, habits: (prev.habits || []).map(h => idToNewSort[h.id] !== undefined ? { ...h, sort_order: idToNewSort[h.id] } : h) };
+    }),
+    toggleHabitDone: (habit_id, entry_date) => merge(prev => {
+      const entries = prev.habit_entries || [];
+      const existing = entries.find(e => e.habit_id === habit_id && e.entry_date === entry_date);
+      if (existing && existing.status === 'done') {
+        return { ...prev, habit_entries: entries.filter(e => !(e.habit_id === habit_id && e.entry_date === entry_date)) };
+      }
+      const next = { habit_id, user_id: 'mock', entry_date, status: 'done', created_at: new Date().toISOString() };
+      return existing
+        ? { ...prev, habit_entries: entries.map(e => (e.habit_id === habit_id && e.entry_date === entry_date) ? next : e) }
+        : { ...prev, habit_entries: [...entries, next] };
+    }),
+
     setProfile: (patch) => merge(prev => ({ ...prev, profile: { ...prev.profile, ...patch } })),
     setPomodoro: (patch) => merge(prev => ({ ...prev, pomodoro: { ...prev.pomodoro, ...patch } })),
 
