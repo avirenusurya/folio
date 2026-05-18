@@ -877,7 +877,7 @@ function LastSessionUndo() {
   };
 
   return (
-    <div ref={rootRef} style={{ position: "relative", zIndex: open ? 20 : 10, marginTop: 18 }}>
+    <div ref={rootRef} style={{ position: "relative", zIndex: open ? 20 : 10, marginTop: 10 }}>
       <button
         onClick={() => setOpen(o => !o)}
         className="sans"
@@ -934,6 +934,31 @@ function LastSessionUndo() {
       )}
     </div>
   );
+}
+
+// Two-note sine chime via Web Audio — no asset files, no deps.
+// `kind` of 'rest' descends (work just ended), 'resume' ascends (back to work).
+function playPomodoroChime(kind) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const notes = kind === 'rest' ? [659.25, 523.25] : [523.25, 659.25];
+    notes.forEach((freq, i) => {
+      const t = ctx.currentTime + i * 0.18;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.14, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.75);
+    });
+    setTimeout(() => { try { ctx.close(); } catch {} }, 1800);
+  } catch {}
 }
 
 export function TimerView({ page, setPage }) {
@@ -999,6 +1024,17 @@ export function TimerView({ page, setPage }) {
     advancingRef.current = true;
     f.actions.advancePomodoroPhase();
   }, [f.liveSeconds, cur?.phase, cur?.paused, cur?.target_seconds]);
+
+  // chime on phase transitions only — skip initial mount, page reload, and
+  // session end. Both old and new phases must be set, and different.
+  const prevPhaseRef = React.useRef(cur?.phase);
+  React.useEffect(() => {
+    const prev = prevPhaseRef.current;
+    const next = cur?.phase;
+    prevPhaseRef.current = next;
+    if (!prev || !next || prev === next) return;
+    playPomodoroChime(next === 'work' ? 'resume' : 'rest');
+  }, [cur?.phase]);
 
   const weeklyMode = !!f.state.goals.weekly_goal_mode;
   const goalSec = weeklyMode ? f.state.goals.weekly_seconds : f.state.goals.daily_seconds;
@@ -1157,7 +1193,7 @@ export function TimerView({ page, setPage }) {
             <GoalBar label={goalLabel} doneSec={doneSec} goalSec={goalSec} />
           </div>
 
-          <div style={{ marginBottom: isMobile ? 38 : 56, display: "flex", justifyContent: "center", paddingInline: 16, position: "relative", zIndex: 50 }}>
+          <div style={{ marginBottom: isMobile ? 22 : 30, display: "flex", justifyContent: "center", paddingInline: 16, position: "relative", zIndex: 50 }}>
             <SubjectCapsule
               active={sub}
               subjects={f.subjectsActive}
@@ -1176,7 +1212,7 @@ export function TimerView({ page, setPage }) {
           />
 
           {/* hint row */}
-          <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 32, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7, position: "relative", zIndex: 40 }}>
+          <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 18, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7, position: "relative", zIndex: 40 }}>
             space pause · esc end · ←→ switch · j journal · <PomodoroQuickConfig />
           </div>
 
