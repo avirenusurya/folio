@@ -601,10 +601,26 @@ function ThemeSection() {
                 border: isActive ? "1.5px solid var(--accent)" : "1.5px solid transparent",
               }}>
               <div className="serif" style={{ fontSize: 24, color: "var(--ink)" }}>{t.label}</div>
-              <div style={{ display: "flex", gap: 6, marginTop: 16 }}>
-                {t.swatches.map((c, i) => (
-                  <span key={i} style={{ width: 22, height: 22, borderRadius: 999, background: c, border: "1px solid rgba(0,0,0,0.06)" }}/>
-                ))}
+              <div style={{
+                marginTop: 16, height: 78, borderRadius: 8, padding: 10,
+                background: t.swatches[0],
+                border: "1px solid rgba(0,0,0,0.06)",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+                overflow: "hidden",
+              }}>
+                <div style={{
+                  background: t.swatches[1], borderRadius: 5, padding: "6px 8px",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                  display: "flex", flexDirection: "column", gap: 5,
+                }}>
+                  <span className="serif" style={{ fontSize: 11, color: t.swatches[3], lineHeight: 1 }}>folio</span>
+                  <span style={{ height: 2, width: "60%", background: t.swatches[3], opacity: 0.18, borderRadius: 1 }} />
+                  <span style={{ height: 2, width: "40%", background: t.swatches[3], opacity: 0.18, borderRadius: 1 }} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 999, background: t.swatches[2] }} />
+                  <span style={{ flex: 1, height: 3, background: t.swatches[2], opacity: 0.55, borderRadius: 2 }} />
+                </div>
               </div>
             </button>
           );
