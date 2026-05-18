@@ -578,14 +578,18 @@ function GoalsSection() {
 function ThemeSection() {
   const f = useFolio();
   const themes = [
-    { id: "sepia", label: "sepia", swatches: ["#f2e6d2", "#fbf4e4", "#b85c3c", "#2a1d12"] },
-    { id: "light", label: "light", swatches: ["#faf7f2", "#ffffff", "#b85c3c", "#2a1d12"] },
-    { id: "dark",  label: "dark",  swatches: ["#1d160f", "#28201a", "#d97a55", "#f0e5d0"] },
-    { id: "cyan",  label: "cyan",  swatches: ["#e2ecf0", "#f1f7fa", "#1c8aa3", "#142932"] },
+    { id: "sepia",    label: "sepia",    swatches: ["#f2e6d2", "#fbf4e4", "#b85c3c", "#2a1d12"] },
+    { id: "light",    label: "light",    swatches: ["#faf7f2", "#ffffff", "#b85c3c", "#2a1d12"] },
+    { id: "dark",     label: "dark",     swatches: ["#1d160f", "#28201a", "#d97a55", "#f0e5d0"] },
+    { id: "cyan",     label: "cyan",     swatches: ["#e2ecf0", "#f1f7fa", "#1c8aa3", "#142932"] },
+    { id: "forest",   label: "forest",   swatches: ["#e8ede0", "#f3f6ec", "#4a7d3a", "#1f2c1a"] },
+    { id: "rose",     label: "rose",     swatches: ["#f7e8e8", "#fdf2f2", "#c44a6a", "#3a1f24"] },
+    { id: "midnight", label: "midnight", swatches: ["#0f1a2a", "#1a2538", "#5b9cd6", "#e5edf7"] },
+    { id: "plum",     label: "plum",     swatches: ["#1d1320", "#2a1d30", "#b87ad6", "#ece0ef"] },
   ];
   return (
     <>
-      <SectionHeader title="theme" sub="four modes" />
+      <SectionHeader title="theme" sub="eight modes" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginTop: 28, maxWidth: 760 }}>
         {themes.map(t => {
           const isActive = t.id === f.state.profile.theme;
