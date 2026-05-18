@@ -147,7 +147,7 @@ function LeaderRow({ rank, row, maxSeconds, isPresent, onClick, compact = false,
         borderRadius: mobile ? 14 : 16,
         boxShadow: "var(--shadow-soft)",
         textAlign: "left", width: "100%",
-        border: row.is_you ? "1.5px solid rgba(184,92,60,0.55)" : "1.5px solid transparent",
+        border: row.is_you ? "1.5px solid color-mix(in srgb, var(--accent) 55%, transparent)" : "1.5px solid transparent",
         position: "relative",
       }}
     >
