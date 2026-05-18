@@ -471,7 +471,7 @@ export function CalendarView() {
                 gridColumn: isMobile && i === cards.length - 1 ? "1 / -1" : undefined,
               }}>
                 <div className="smallcaps" style={{ color: "var(--ink-3)", marginBottom: 10, fontSize: 10 }}>{s.label}</div>
-                <div style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: isMobile ? 28 : 34, fontWeight: 400, color: "var(--ink)", lineHeight: 1.1 }}>
+                <div style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: isMobile ? 28 : 34, fontWeight: 400, color: "var(--ink)", lineHeight: 1.1 }}>
                   {s.value}
                 </div>
               </div>

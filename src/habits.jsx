@@ -353,7 +353,7 @@ function CadencePicker({ cadence, onChange, isMobile }) {
               position: 'relative',
               padding: '4px 2px',
               fontSize: isMobile ? 19 : 22,
-              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontFamily: "var(--font-serif)",
               fontStyle: 'italic',
               color: cadence === o ? 'var(--accent)' : 'var(--ink-3)',
               transition: 'color 220ms',
@@ -599,7 +599,7 @@ function HabitEditorModal({ habit, open, onClose }) {
 const inputStyle = {
   width: '100%', padding: '12px 14px', borderRadius: 10,
   border: '1px solid rgba(110,90,71,0.25)', background: 'var(--surface-2)',
-  fontFamily: "'Instrument Serif', serif", fontSize: 18, color: 'var(--ink)', outline: 'none',
+  fontFamily: "var(--font-serif)", fontSize: 18, color: 'var(--ink)', outline: 'none',
 };
 
 // ---------- MAIN VIEW ----------
@@ -711,7 +711,7 @@ export function HabitsView() {
             background: 'transparent',
             color: 'var(--ink-3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: 'italic',
+            fontFamily: "var(--font-serif)", fontStyle: 'italic',
             fontSize: isMobile ? 18 : 20,
             cursor: 'pointer',
           }}>

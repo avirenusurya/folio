@@ -230,7 +230,7 @@ const inputStyle = {
   borderRadius: 10,
   border: "1px solid rgba(110,90,71,0.25)",
   background: "var(--surface-2, var(--surface))",
-  fontFamily: "'Instrument Serif', serif",
+  fontFamily: "var(--font-serif)",
   fontSize: 18,
   color: "var(--ink)",
   outline: "none",
@@ -333,7 +333,7 @@ function JoinGroupModal({ open, onClose, onJoined }) {
           onChange={e => setCode(e.target.value.toUpperCase())}
           maxLength={6}
           placeholder="ABCDEF"
-          style={{ ...inputStyle, letterSpacing: "0.3em", textTransform: "uppercase", fontFamily: "'Instrument Serif', serif" }}
+          style={{ ...inputStyle, letterSpacing: "0.3em", textTransform: "uppercase", fontFamily: "var(--font-serif)" }}
         />
         {err && <div className="sans" style={{ color: "var(--accent)", marginTop: 14, fontSize: 13 }}>{err}</div>}
         <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", gap: 4, alignItems: "center" }}>
@@ -527,7 +527,7 @@ export function SocietyView({ onOpenMember }) {
               }}
             >
               <span className="smallcaps" style={{ fontSize: 9, color: "var(--ink-3)", letterSpacing: "0.18em" }}>code</span>
-              <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 15, letterSpacing: "0.22em", color: "var(--ink)" }}>{selectedGroup.invite_code}</span>
+              <span style={{ fontFamily: "var(--font-serif)", fontSize: 15, letterSpacing: "0.22em", color: "var(--ink)" }}>{selectedGroup.invite_code}</span>
               <span className="smallcaps" style={{ fontSize: 9, color: inviteCopied ? "var(--accent)" : "var(--ink-3)", letterSpacing: "0.18em" }}>
                 {inviteCopied ? "copied" : "copy"}
               </span>
@@ -625,7 +625,7 @@ function StatCard({ label, value, hidden, isLast }) {
     }}>
       <div className="smallcaps" style={{ color: "var(--ink-3)", marginBottom: 10, fontSize: 10 }}>{label}</div>
       <div style={{
-        fontFamily: "'Instrument Serif', serif", fontStyle: hidden ? "normal" : "italic",
+        fontFamily: "var(--font-serif)", fontStyle: hidden ? "normal" : "italic",
         fontSize: hidden ? 22 : isMobile ? 28 : 34, fontWeight: 400, color: hidden ? "var(--ink-3)" : "var(--ink)",
         lineHeight: 1.1,
       }}>

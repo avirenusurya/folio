@@ -30,13 +30,16 @@
   --shadow-soft: 0 1px 2px rgba(70, 40, 20, 0.05), 0 8px 24px rgba(70, 40, 20, 0.06);
   --shadow-card: 0 1px 2px rgba(70, 40, 20, 0.06), 0 12px 32px rgba(70, 40, 20, 0.09);
   --shadow-tilt: 0 2px 4px rgba(70, 40, 20, 0.07), 0 18px 38px rgba(70, 40, 20, 0.12);
+
+  --font-sans:  'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'EB Garamond', Georgia, serif;
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 
 body {
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
   color: var(--ink);
   background: var(--bg);
@@ -66,12 +69,12 @@ body {
 #app { position: relative; z-index: 2; min-height: 100vh; }
 
 /* type helpers */
-.serif { font-family: 'Instrument Serif', 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400; }
-.serif-up { font-family: 'Instrument Serif', Georgia, serif; font-style: normal; }
-.sans { font-family: 'Geist', sans-serif; }
+.serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
+.serif-up { font-family: var(--font-serif); font-style: normal; }
+.sans { font-family: var(--font-sans); }
 .mono { font-family: 'Geist Mono', ui-monospace, monospace; }
 .smallcaps {
-  font-family: 'Geist', sans-serif;
+  font-family: var(--font-sans);
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-weight: 500;

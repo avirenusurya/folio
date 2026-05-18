@@ -7,6 +7,56 @@ export const COLOR_PALETTE = [
   "#B85C3C", "#7E8B6F", "#A65B5B", "#7A8FA3",
 ];
 
+// --- font pairs (user-pickable in settings → theme) ---
+export const FONT_PAIRS = {
+  folio: {
+    label: "folio",
+    sub: "instrument serif · geist",
+    sans: "'Geist', ui-sans-serif, system-ui, sans-serif",
+    serif: "'Instrument Serif', 'EB Garamond', Georgia, serif",
+    href: null,
+  },
+  editorial: {
+    label: "editorial",
+    sub: "fraunces · manrope",
+    sans: "'Manrope', ui-sans-serif, system-ui, sans-serif",
+    serif: "'Fraunces', 'EB Garamond', Georgia, serif",
+    href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Manrope:wght@400;500;600&display=swap",
+  },
+  classic: {
+    label: "classic",
+    sub: "eb garamond · public sans",
+    sans: "'Public Sans', ui-sans-serif, system-ui, sans-serif",
+    serif: "'EB Garamond', Georgia, serif",
+    href: "https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Public+Sans:wght@400;500;600&display=swap",
+  },
+  display: {
+    label: "display",
+    sub: "dm serif display · bricolage",
+    sans: "'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif",
+    serif: "'DM Serif Display', 'EB Garamond', Georgia, serif",
+    href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Bricolage+Grotesque:wght@400;500;600&display=swap",
+  },
+};
+
+export const FONT_STORAGE_KEY = "folio_font_pair";
+export const FONT_EVENT = "folio-font-change";
+
+export function getFontPair() {
+  try {
+    const id = localStorage.getItem(FONT_STORAGE_KEY);
+    return FONT_PAIRS[id] ? id : "folio";
+  } catch {
+    return "folio";
+  }
+}
+
+export function setFontPair(id) {
+  if (!FONT_PAIRS[id]) return;
+  try { localStorage.setItem(FONT_STORAGE_KEY, id); } catch {}
+  window.dispatchEvent(new CustomEvent(FONT_EVENT, { detail: id }));
+}
+
 export function useMediaQuery(query) {
   const getMatch = () => (
     typeof window !== "undefined" && typeof window.matchMedia === "function"
@@ -222,7 +272,7 @@ export function Avatar({ initials, src, size = 32, ring = false }) {
       background: "var(--surface-2)",
       display: "flex", alignItems: "center", justifyContent: "center",
       color: "var(--ink)",
-      fontFamily: "'Geist', sans-serif", fontWeight: 500,
+      fontFamily: "var(--font-sans)", fontWeight: 500,
       fontSize: size * 0.36,
       border: ring ? "1px solid rgba(110,90,71,0.25)" : "1px solid rgba(110,90,71,0.18)",
       letterSpacing: "0.04em",

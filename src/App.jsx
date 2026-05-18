@@ -10,11 +10,43 @@ import { SocietyView, MemberProfileView } from './society.jsx';
 import { JournalView } from './journal.jsx';
 import { HabitsView } from './habits.jsx';
 import { SettingsView } from './settings.jsx';
-import { Dock } from './shared.jsx';
+import { Dock, FONT_PAIRS, getFontPair, FONT_EVENT, FONT_STORAGE_KEY } from './shared.jsx';
 import { MockFolioProvider } from './onboarding/MockProvider.jsx';
 import { OnboardingTour } from './onboarding/Tour.jsx';
 
 /* App shell — providers, theme injection, router, tweaks */
+
+function ensureFontStylesheet(href) {
+  if (!href) return;
+  if (document.querySelector(`link[data-folio-font="${href}"]`)) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = href;
+  link.dataset.folioFont = href;
+  document.head.appendChild(link);
+}
+
+function FontApplier() {
+  const [pairId, setPairId] = React.useState(getFontPair);
+  React.useEffect(() => {
+    const onChange = (e) => setPairId(e.detail || getFontPair());
+    const onStorage = (e) => { if (e.key === FONT_STORAGE_KEY) setPairId(getFontPair()); };
+    window.addEventListener(FONT_EVENT, onChange);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(FONT_EVENT, onChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+  React.useEffect(() => {
+    const pair = FONT_PAIRS[pairId] || FONT_PAIRS.folio;
+    ensureFontStylesheet(pair.href);
+    const root = document.documentElement;
+    root.style.setProperty("--font-sans", pair.sans);
+    root.style.setProperty("--font-serif", pair.serif);
+  }, [pairId]);
+  return null;
+}
 
 function ThemeApplier() {
   const f = useFolio();
@@ -251,6 +283,7 @@ function OnboardingFlow({ onDone }) {
   return (
     <MockFolioProvider>
       <ThemeApplier />
+      <FontApplier />
       <AppShell
         page={page}
         setPage={setPage}
@@ -284,6 +317,7 @@ function SignedInRouter() {
   return (
     <FolioProvider>
       <ThemeApplier />
+      <FontApplier />
       <SignedInApp />
     </FolioProvider>
   );

@@ -2,7 +2,7 @@ import React from 'react';
 import { useFolio, todayISO, toISODate, addDays, daysBetween, parseISODate } from './state.jsx';
 import { useAuth } from './auth-context.jsx';
 import { supabase } from './lib/supabase.js';
-import { IconCap, IconBook, IconDoc, IconPencil, IconArrow, Avatar, useMediaQuery, COLOR_PALETTE } from './shared.jsx';
+import { IconCap, IconBook, IconDoc, IconPencil, IconArrow, Avatar, useMediaQuery, COLOR_PALETTE, FONT_PAIRS, getFontPair, setFontPair } from './shared.jsx';
 
 /* Settings — fully wired CRUD */
 
@@ -626,7 +626,64 @@ function ThemeSection() {
           );
         })}
       </div>
+      <TypographyPicker />
     </>
+  );
+}
+
+function TypographyPicker() {
+  const [pairId, setPairId] = React.useState(getFontPair);
+  const pairs = Object.entries(FONT_PAIRS);
+  React.useEffect(() => {
+    for (const [, p] of pairs) {
+      if (!p.href) continue;
+      if (document.querySelector(`link[data-folio-font="${p.href}"]`)) continue;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = p.href;
+      link.dataset.folioFont = p.href;
+      document.head.appendChild(link);
+    }
+  }, []);
+  return (
+    <div style={{ marginTop: 44 }}>
+      <div className="serif" style={{ fontSize: 28, color: "var(--ink)", lineHeight: 1.05 }}>typography</div>
+      <div className="sans" style={{ color: "var(--ink-3)", fontSize: 13, marginTop: 4 }}>four pairings</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginTop: 18, maxWidth: 760 }}>
+        {pairs.map(([id, p]) => {
+          const isActive = id === pairId;
+          return (
+            <button key={id} className="lift"
+              onClick={() => { setFontPair(id); setPairId(id); }}
+              style={{
+                background: "var(--surface)", borderRadius: 14, padding: "18px 18px",
+                textAlign: "left", boxShadow: "var(--shadow-soft)",
+                border: isActive ? "1.5px solid var(--accent)" : "1.5px solid transparent",
+              }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+                <div className="serif" style={{ fontSize: 22, color: "var(--ink)" }}>{p.label}</div>
+                <div style={{ fontFamily: p.sans, fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+                  {isActive ? "active" : "preview"}
+                </div>
+              </div>
+              <div style={{
+                marginTop: 14, padding: "12px 14px", borderRadius: 8,
+                background: "var(--surface-2)", border: "1px solid rgba(0,0,0,0.05)",
+                display: "flex", flexDirection: "column", gap: 4, minHeight: 76,
+              }}>
+                <div style={{ fontFamily: p.serif, fontStyle: "italic", fontSize: 26, color: "var(--ink)", lineHeight: 1.05 }}>
+                  folio
+                </div>
+                <div style={{ fontFamily: p.sans, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.3 }}>
+                  The quick brown fox
+                </div>
+              </div>
+              <div className="sans" style={{ marginTop: 10, color: "var(--ink-3)", fontSize: 12 }}>{p.sub}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
