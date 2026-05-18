@@ -1071,6 +1071,7 @@ function ProfileSection() {
         <Row label="show longest session"><Toggle on={p.show_longest} onChange={(v) => f.actions.setProfile({ show_longest: v })} /></Row>
         <Row label="show best week"><Toggle on={p.show_best_week} onChange={(v) => f.actions.setProfile({ show_best_week: v })} /></Row>
         <Row label="appear in &lsquo;currently studying&rsquo; count"><Toggle on={p.appear_in_currently_studying} onChange={(v) => f.actions.setProfile({ appear_in_currently_studying: v })} /></Row>
+        <Row label="share my tasks with group members"><Toggle on={p.tasks_public} onChange={(v) => f.actions.setProfile({ tasks_public: v })} /></Row>
       </div>
     </>
   );
