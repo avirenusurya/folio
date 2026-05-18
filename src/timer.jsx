@@ -722,35 +722,39 @@ function PomodoroQuickConfig() {
   }, [open]);
 
   const label = p.enabled
-    ? `mode · pomodoro ${p.work_min}/${p.short_break_min}`
+    ? `mode · ${p.work_min}/${p.short_break_min}`
     : "mode · stopwatch";
 
   return (
-    <div ref={rootRef} style={{ position: "relative", zIndex: open ? 20 : 10, marginTop: 10 }}>
+    <span ref={rootRef} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="sans"
         aria-haspopup="dialog"
         aria-expanded={open}
         style={{
-          fontSize: 12, color: "var(--ink-3)",
           background: "transparent",
-          padding: "4px 6px",
-          letterSpacing: "0.02em",
+          color: "inherit",
+          padding: 0,
+          font: "inherit",
+          letterSpacing: "inherit",
+          textTransform: "inherit",
         }}
       >
         {label} <span style={{ opacity: 0.55 }}>▾</span>
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute", left: "50%", top: "100%", marginTop: 8,
+        <div className="sans" style={{
+          position: "absolute", left: "50%", bottom: "100%", marginBottom: 10,
           transform: "translateX(-50%)",
           background: "var(--surface)", borderRadius: 12, boxShadow: "var(--shadow-tilt)",
           padding: 16,
           width: 300, maxWidth: "calc(100vw - 32px)",
           display: "flex", flexDirection: "column", gap: 14,
           textAlign: "left",
+          textTransform: "none",
+          letterSpacing: "normal",
+          fontSize: 14,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span className="sans" style={{ fontSize: 14, color: "var(--ink)" }}>pomodoro mode</span>
@@ -780,7 +784,7 @@ function PomodoroQuickConfig() {
           )}
         </div>
       )}
-    </div>
+    </span>
   );
 }
 
@@ -1074,11 +1078,10 @@ export function TimerView({ page, setPage }) {
           />
 
           {/* hint row */}
-          <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 32, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7 }}>
-            space pause · esc end · 1–9 switch · j journal
+          <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 32, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7, position: "relative", zIndex: 40 }}>
+            space pause · esc end · 1–9 switch · j journal · <PomodoroQuickConfig />
           </div>
 
-          <PomodoroQuickConfig />
           <LastSessionUndo />
         </div>
       </div>
