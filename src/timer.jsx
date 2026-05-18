@@ -756,11 +756,18 @@ const POMODORO_PRESETS = [
   { name: "ultra 90/20",  work: 90, sb: 20, lb: 30 },
 ];
 
-function PomodoroQuickConfig() {
+function PomodoroQuickConfig({ onOpenChange }) {
   const f = useFolio();
   const p = f.state.pomodoro;
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpenState] = React.useState(false);
   const rootRef = React.useRef(null);
+  const setOpen = React.useCallback((v) => {
+    setOpenState(prev => {
+      const next = typeof v === "function" ? v(prev) : v;
+      onOpenChange?.(next);
+      return next;
+    });
+  }, [onOpenChange]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -769,7 +776,7 @@ function PomodoroQuickConfig() {
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  }, [open, setOpen]);
 
   const label = p.enabled
     ? `mode · ${p.work_min}/${p.short_break_min}`
@@ -986,6 +993,8 @@ export function TimerView({ page, setPage }) {
   }, [running, sub?.id, displaySec]);
 
   const startMode = f.state.pomodoro?.enabled ? "pomodoro" : "stopwatch";
+
+  const [pomodoroPopoverOpen, setPomodoroPopoverOpen] = React.useState(false);
 
   // keyboard shortcuts
   React.useEffect(() => {
@@ -1212,8 +1221,8 @@ export function TimerView({ page, setPage }) {
           />
 
           {/* hint row */}
-          <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 18, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7, position: "relative", zIndex: 40 }}>
-            space pause · esc end · ←→ switch · j journal · <PomodoroQuickConfig />
+          <div className="smallcaps" style={{ color: "var(--ink-4)", marginTop: 18, fontSize: 10, textAlign: "center", paddingInline: 18, lineHeight: 1.7, position: "relative", zIndex: pomodoroPopoverOpen ? 60 : 40 }}>
+            space pause · esc end · ←→ switch · j journal · <PomodoroQuickConfig onOpenChange={setPomodoroPopoverOpen} />
           </div>
 
           <LastSessionUndo />
