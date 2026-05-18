@@ -660,22 +660,17 @@ function TypographyPicker() {
                 textAlign: "left", boxShadow: "var(--shadow-soft)",
                 border: isActive ? "1.5px solid var(--accent)" : "1.5px solid transparent",
               }}>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                <div className="serif" style={{ fontSize: 22, color: "var(--ink)" }}>{p.label}</div>
-                <div style={{ fontFamily: p.sans, fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-                  {isActive ? "active" : "preview"}
-                </div>
-              </div>
+              <div style={{ fontFamily: p.serif, fontStyle: "italic", fontSize: 22, color: "var(--ink)", lineHeight: 1.3 }}>{p.label}</div>
               <div style={{
                 marginTop: 14, padding: "12px 14px", borderRadius: 8,
                 background: "var(--surface-2)", border: "1px solid rgba(0,0,0,0.05)",
-                display: "flex", flexDirection: "column", gap: 4, minHeight: 76,
+                display: "flex", flexDirection: "column", gap: 4, minHeight: 82,
               }}>
-                <div style={{ fontFamily: p.serif, fontStyle: "italic", fontSize: 26, color: "var(--ink)", lineHeight: 1.05 }}>
+                <div style={{ fontFamily: p.serif, fontStyle: "italic", fontSize: 26, color: "var(--ink)", lineHeight: 1.4 }}>
                   folio
                 </div>
                 <div style={{ fontFamily: p.sans, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.3 }}>
-                  The quick brown fox
+                  Aa · 1 2 3
                 </div>
               </div>
               <div className="sans" style={{ marginTop: 10, color: "var(--ink-3)", fontSize: 12 }}>{p.sub}</div>

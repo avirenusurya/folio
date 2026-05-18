@@ -31,8 +31,8 @@ export const STEPS = [
   {
     id: "habits",
     page: "habits",
-    card: { top: 79, left: 1124, width: 320 },
-    arrow: { top: 200, left: 1050, rotate: -160, length: 350 },
+    card: { top: 72, left: 1124, width: 320 },
+    arrow: { top: 288, left: 1334, rotate: 180, length: 258 },
     title: "the habits.",
     text: "small daily things — meditate, read, run — tracked on their own page. check them off as you go; the dots build into a rhythm.",
   },

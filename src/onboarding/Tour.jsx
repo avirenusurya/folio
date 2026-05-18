@@ -98,7 +98,6 @@ export function OnboardingTour({ setPage, onComplete, onSkip }) {
         <div style={{
           position: "fixed", inset: 0, zIndex: 199,
           background: "rgba(42, 29, 18, 0.18)",
-          pointerEvents: "none",
         }} />
         <div className="tour-card" style={{
           position: "fixed", zIndex: 200,
@@ -165,11 +164,10 @@ export function OnboardingTour({ setPage, onComplete, onSkip }) {
 
   return (
     <>
-      {/* subtle backdrop — doesn't fully cover so the underlying page stays visible */}
+      {/* subtle backdrop — captures clicks so only the tour controls are interactive */}
       <div style={{
         position: "fixed", inset: 0, zIndex: 199,
         background: "rgba(42, 29, 18, 0.18)",
-        pointerEvents: "none",
       }} />
 
       {/* arrow */}
