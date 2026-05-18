@@ -21,6 +21,14 @@ export const STEPS = [
     text: "press start (or hit space) to begin a focused session. tap a subject dot — or press 1–9 — to switch.",
   },
   {
+    id: "tasks",
+    page: "timer",
+    card: { top: 79, left: 1124, width: 320 },
+    arrow: { top: 146, left: 330, rotate: 40, length: 162 },
+    title: "today's list.",
+    text: "a small checklist beside the timer. jot what you mean to do today — tick items off as you go, and tomorrow brings a fresh list.",
+  },
+  {
     id: "calendar",
     page: "calendar",
     card: { top: 72, left: 1124, width: 320 },
