@@ -163,7 +163,7 @@ export function Dock({ page, setPage, sessionRunning }) {
           const Icon = it.icon;
           const active = page === it.id;
           const raised = hoveredId === it.id && !active;
-          const showPulseDot = active && it.id === "timer" && sessionRunning;
+          const showPulseDot = !active && it.id === "timer" && sessionRunning;
           return (
             <React.Fragment key={it.id}>
               {i > 0 && <span style={{
