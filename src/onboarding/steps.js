@@ -29,12 +29,12 @@ export const STEPS = [
     text: "every day fills a square. darker means more hours. click a cell to see exactly what you studied.",
   },
   {
-    id: "tasks",
-    page: "timer",
+    id: "habits",
+    page: "habits",
     card: { top: 79, left: 1124, width: 320 },
-    arrow: { top: 200, left: 380, rotate: 165, length: 250 },
-    title: "today's list.",
-    text: "a small checklist beside the timer. jot what you mean to do today — tick items off as you go, and tomorrow brings a fresh list.",
+    arrow: { top: 200, left: 1050, rotate: -160, length: 350 },
+    title: "the habits.",
+    text: "small daily things — meditate, read, run — tracked on their own page. check them off as you go; the dots build into a rhythm.",
   },
   {
     id: "society",
