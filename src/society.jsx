@@ -410,6 +410,32 @@ function GroupOptionsModal({ open, onClose, group, onLeft }) {
   );
 }
 
+function KickableRow({ row, handle, onKick }) {
+  const [hover, setHover] = React.useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      {row}
+      <button
+        onClick={onKick}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        title={`remove @${handle}`}
+        aria-label={`remove @${handle}`}
+        style={{
+          position: "absolute", top: 8, right: 10,
+          width: 24, height: 24, borderRadius: 999,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: hover ? "var(--accent)" : "var(--ink-3)",
+          fontSize: 18, lineHeight: 1,
+          background: "transparent",
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 // --- main view -----------------------------------------------------------
 
 export function SocietyView({ onOpenMember }) {
@@ -441,7 +467,8 @@ export function SocietyView({ onOpenMember }) {
     }
   }, [groups, groupId]);
 
-  // fetch leaderboard whenever group or period changes
+  // fetch leaderboard whenever group or period changes (or on bump after a kick)
+  const [boardBump, setBoardBump] = React.useState(0);
   React.useEffect(() => {
     if (!groupId) { setLeaderboard(null); return; }
     let cancelled = false;
@@ -459,9 +486,20 @@ export function SocietyView({ onOpenMember }) {
         setBoardLoading(false);
       });
     return () => { cancelled = true; };
-  }, [groupId, period]);
+  }, [groupId, period, boardBump]);
 
   const selectedGroup = groups.find(g => g.id === groupId);
+  const isOwner = selectedGroup?.my_role === 'owner';
+  const kick = async (row) => {
+    if (!selectedGroup) return;
+    if (!confirm(`remove @${row.handle} from "${selectedGroup.name}"?`)) return;
+    try {
+      await actions.kickMember(selectedGroup.id, row.user_id);
+      setBoardBump(b => b + 1);
+    } catch (e) {
+      alert(e.message || "couldn't remove member");
+    }
+  };
   const maxSeconds = (leaderboard || []).reduce((m, r) => Math.max(m, r.total_seconds), 0);
   const youRow = (leaderboard || []).find(r => r.is_you);
   const youRank = youRow ? (leaderboard.indexOf(youRow) + 1) : null;
@@ -548,18 +586,29 @@ export function SocietyView({ onOpenMember }) {
           {!boardLoading && leaderboard && leaderboard.length === 0 && (
             <div className="serif" style={{ color: "var(--ink-3)", fontSize: 18, textAlign: "center", padding: "40px 0" }}>no sessions in this period yet.</div>
           )}
-          {leaderboard && leaderboard.map((r, i) => (
-            <LeaderRow
-              key={r.user_id}
-              rank={i + 1}
-              row={r}
-              maxSeconds={maxSeconds}
-              isPresent={presentIds.has(r.user_id)}
-              onClick={() => onOpenMember && onOpenMember(r.user_id)}
-              compact={isCompact}
-              mobile={isMobile}
-            />
-          ))}
+          {leaderboard && leaderboard.map((r, i) => {
+            const canKick = isOwner && !r.is_you;
+            const row = (
+              <LeaderRow
+                rank={i + 1}
+                row={r}
+                maxSeconds={maxSeconds}
+                isPresent={presentIds.has(r.user_id)}
+                onClick={() => onOpenMember && onOpenMember(r.user_id)}
+                compact={isCompact}
+                mobile={isMobile}
+              />
+            );
+            if (!canKick) return <React.Fragment key={r.user_id}>{row}</React.Fragment>;
+            return (
+              <KickableRow
+                key={r.user_id}
+                row={row}
+                handle={r.handle}
+                onKick={(e) => { e.stopPropagation(); kick(r); }}
+              />
+            );
+          })}
         </div>
 
         {youRow && leaderboard && leaderboard.length > 1 && (

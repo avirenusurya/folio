@@ -604,6 +604,16 @@ export function FolioProvider({ children }) {
       setState(p => p ? { ...p, groups: p.groups.filter(g => g.id !== group_id) } : p);
     },
 
+    kickMember: async (group_id, user_id) => {
+      const { error } = await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', group_id)
+        .eq('user_id', user_id);
+      if (error) throw error;
+      await actions.refreshGroups();
+    },
+
     getLeaderboard: async (group_id, period) => {
       const today = new Date();
       const isoToday = toISODate(today);
