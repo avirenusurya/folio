@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFolio, fmtHMS, fmtHoursLong, todayISO, daysBetween, addDays, toISODate } from './state.jsx';
 import { HandUnderline, IconCap, IconBook, IconDoc, useMediaQuery, COLOR_PALETTE } from './shared.jsx';
+import { Slider, Toggle } from './settings.jsx';
 
 /* Home / Timer view — live from store */
 
@@ -699,6 +700,90 @@ function TimerControls({ state, onPause, onResume, onEnd, onStart }) {
   return <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}><Pill onClick={onPause}>pause</Pill><Pill kind="primary" onClick={onEnd}>end session</Pill></div>;
 }
 
+const POMODORO_PRESETS = [
+  { name: "classic 25/5", work: 25, sb: 5,  lb: 15 },
+  { name: "deep 50/10",   work: 50, sb: 10, lb: 20 },
+  { name: "ultra 90/20",  work: 90, sb: 20, lb: 30 },
+];
+
+function PomodoroQuickConfig() {
+  const f = useFolio();
+  const p = f.state.pomodoro;
+  const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const label = p.enabled
+    ? `mode · pomodoro ${p.work_min}/${p.short_break_min}`
+    : "mode · stopwatch";
+
+  return (
+    <div ref={rootRef} style={{ position: "relative", zIndex: open ? 20 : 10, marginTop: 10 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="sans"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        style={{
+          fontSize: 12, color: "var(--ink-3)",
+          background: "transparent",
+          padding: "4px 6px",
+          letterSpacing: "0.02em",
+        }}
+      >
+        {label} <span style={{ opacity: 0.55 }}>▾</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", left: "50%", top: "100%", marginTop: 8,
+          transform: "translateX(-50%)",
+          background: "var(--surface)", borderRadius: 12, boxShadow: "var(--shadow-tilt)",
+          padding: 16,
+          width: 300, maxWidth: "calc(100vw - 32px)",
+          display: "flex", flexDirection: "column", gap: 14,
+          textAlign: "left",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span className="sans" style={{ fontSize: 14, color: "var(--ink)" }}>pomodoro mode</span>
+            <Toggle on={p.enabled} onChange={(v) => f.actions.setPomodoro({ enabled: v })} />
+          </div>
+          {p.enabled && (
+            <>
+              <div>
+                <Slider label="Work"        min={5} max={90} step={1} value={p.work_min}           unit=" min" onChange={(v) => f.actions.setPomodoro({ work_min: v })} />
+                <Slider label="Short break" min={1} max={30} step={1} value={p.short_break_min}    unit=" min" onChange={(v) => f.actions.setPomodoro({ short_break_min: v })} />
+                <Slider label="Long break"  min={5} max={60} step={1} value={p.long_break_min}     unit=" min" onChange={(v) => f.actions.setPomodoro({ long_break_min: v })} />
+                <Slider label="Cycles before long" min={2} max={8} step={1} value={p.cycles_before_long} unit="" onChange={(v) => f.actions.setPomodoro({ cycles_before_long: v })} />
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {POMODORO_PRESETS.map(preset => (
+                  <button
+                    key={preset.name}
+                    onClick={() => f.actions.setPomodoro({ work_min: preset.work, short_break_min: preset.sb, long_break_min: preset.lb })}
+                    className="sans"
+                    style={{ padding: "7px 12px", borderRadius: 999, background: "var(--bg)", boxShadow: "var(--shadow-soft)", fontSize: 12, color: "var(--ink-2)" }}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const RECENT_SESSION_WINDOW_MS = 60 * 60 * 1000;
 
 function LastSessionUndo() {
@@ -993,6 +1078,7 @@ export function TimerView({ page, setPage }) {
             space pause · esc end · 1–9 switch · j journal
           </div>
 
+          <PomodoroQuickConfig />
           <LastSessionUndo />
         </div>
       </div>

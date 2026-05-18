@@ -7,7 +7,7 @@ import { IconCap, IconBook, IconDoc, IconPencil, IconArrow, Avatar, useMediaQuer
 /* Settings — fully wired CRUD */
 
 const NAV = [
-  "subjects", "d-days", "goals", "pomodoro",
+  "subjects", "d-days", "goals",
   "theme", "profile & privacy",
   "account", "data & export",
 ];
@@ -25,7 +25,7 @@ function isUniqueHandleError(error) {
 
 // --- shared controls ---
 
-function Toggle({ on, onChange }) {
+export function Toggle({ on, onChange }) {
   return (
     <button onClick={() => onChange(!on)} style={{
       width: 48, height: 26, borderRadius: 999,
@@ -44,7 +44,7 @@ function Toggle({ on, onChange }) {
   );
 }
 
-function Slider({ label, value, min, max, step, unit, onChange, formatValue }) {
+export function Slider({ label, value, min, max, step, unit, onChange, formatValue }) {
   return (
     <div style={{ marginBottom: 28 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
@@ -357,7 +357,6 @@ export function SettingsView() {
             <DDaysSection onAdd={() => setDDayEditor("new")} onEdit={(d) => setDDayEditor(d)} />
           )}
           {activeNav === "goals" && <GoalsSection />}
-          {activeNav === "pomodoro" && <PomodoroSection />}
           {activeNav === "theme" && <ThemeSection />}
           {activeNav === "profile & privacy" && <ProfileSection />}
           {activeNav === "account" && <AccountSection />}
@@ -576,45 +575,6 @@ function GoalsSection() {
         <span className="sans" style={{ fontSize: 16, color: "var(--ink)" }}>use weekly goal mode</span>
         <Toggle on={f.state.goals.weekly_goal_mode} onChange={(v) => f.actions.setGoals({ weekly_goal_mode: v })} />
       </div>
-    </>
-  );
-}
-
-function PomodoroSection() {
-  const f = useFolio();
-  const p = f.state.pomodoro;
-  return (
-    <>
-      <SectionHeader title="pomodoro" sub="optional structured cycles" />
-      <p className="serif" style={{ color: "var(--ink-2)", fontSize: 17, marginTop: 16, maxWidth: 560 }}>
-        if you prefer structured study, customize your pomodoro cycle here. otherwise, leave it off and use the stopwatch.
-      </p>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 560, marginTop: 22 }}>
-        <span className="sans" style={{ fontSize: 16, color: "var(--ink)" }}>enable pomodoro mode</span>
-        <Toggle on={p.enabled} onChange={(v) => f.actions.setPomodoro({ enabled: v })} />
-      </div>
-      {p.enabled && (
-        <>
-          <div style={{ marginTop: 36, maxWidth: 560 }}>
-            <Slider label="Work"        min={5} max={90} step={1} value={p.work_min} unit=" min" onChange={(v) => f.actions.setPomodoro({ work_min: v })} />
-            <Slider label="Short break" min={1} max={30} step={1} value={p.short_break_min} unit=" min" onChange={(v) => f.actions.setPomodoro({ short_break_min: v })} />
-            <Slider label="Long break"  min={5} max={60} step={1} value={p.long_break_min} unit=" min" onChange={(v) => f.actions.setPomodoro({ long_break_min: v })} />
-            <Slider label="Cycles before long break" min={2} max={8} step={1} value={p.cycles_before_long} unit="" onChange={(v) => f.actions.setPomodoro({ cycles_before_long: v })} />
-          </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 6, flexWrap: "wrap" }}>
-            {[
-              { name: "classic 25/5",  work: 25, sb: 5,  lb: 15 },
-              { name: "deep 50/10",    work: 50, sb: 10, lb: 20 },
-              { name: "ultra 90/20",   work: 90, sb: 20, lb: 30 },
-            ].map(preset => (
-              <button key={preset.name} onClick={() => f.actions.setPomodoro({ work_min: preset.work, short_break_min: preset.sb, long_break_min: preset.lb })} className="sans"
-                style={{ padding: "10px 18px", borderRadius: 999, background: "var(--surface)", boxShadow: "var(--shadow-soft)", fontSize: 13, color: "var(--ink-2)" }}>
-                {preset.name}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
     </>
   );
 }
