@@ -8,6 +8,7 @@ import { TimerView } from './timer.jsx';
 import { CalendarView } from './calendar.jsx';
 import { SocietyView, MemberProfileView } from './society.jsx';
 import { JournalView } from './journal.jsx';
+import { HabitsView } from './habits.jsx';
 import { SettingsView } from './settings.jsx';
 import { Dock } from './shared.jsx';
 import { MockFolioProvider } from './onboarding/MockProvider.jsx';
@@ -173,6 +174,7 @@ function AppShell({ page, setPage, showTweaks = true, hideDock = false }) {
   let view;
   if (page === "timer") view = <TimerView page={page} setPage={setPage} />;
   else if (page === "calendar") view = <CalendarView />;
+  else if (page === "habits") view = <HabitsView />;
   else if (page === "society") view = memberUserId ? <MemberProfileView userId={memberUserId} onBack={() => setMemberUserId(null)} /> : <SocietyView onOpenMember={setMemberUserId} />;
   else if (page === "journal") view = <JournalView />;
   else if (page === "settings") view = <SettingsView />;
@@ -191,6 +193,7 @@ function AppShell({ page, setPage, showTweaks = true, hideDock = false }) {
               options={[
                 { value: "timer", label: "Timer" },
                 { value: "calendar", label: "Calendar" },
+                { value: "habits", label: "Habits" },
                 { value: "society", label: "Society" },
                 { value: "journal", label: "Journal" },
                 { value: "settings", label: "Settings" },
