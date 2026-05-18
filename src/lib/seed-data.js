@@ -95,6 +95,53 @@ function seedTasks() {
   ];
 }
 
+const DEMO_HABITS = [
+  { id: "h_run",     name: "morning run",   color: "#8B9A82", note: "easy 3k", sort_order: 0, daysBack: 84, density: 0.72 },
+  { id: "h_read",    name: "read 20 pages", color: "#C19A3F", note: null,      sort_order: 1, daysBack: 84, density: 0.82 },
+  { id: "h_med",     name: "meditate",      color: "#8B6F8E", note: "10 min",  sort_order: 2, daysBack: 70, density: 0.58 },
+  { id: "h_stretch", name: "stretch",       color: "#C77B5F", note: null,      sort_order: 3, daysBack: 42, density: 0.66 },
+];
+
+function seedHabits() {
+  const now = new Date().toISOString();
+  return DEMO_HABITS.map(h => ({
+    id: h.id, name: h.name, color: h.color, note: h.note,
+    sort_order: h.sort_order, target_per_week: null,
+    archived_at: null,
+    created_at: new Date(Date.now() - h.daysBack * 86400000).toISOString(),
+  }));
+}
+
+function seedHabitEntries() {
+  const rng = mulberry32(20260516);
+  const today = new Date();
+  const entries = [];
+  for (const h of DEMO_HABITS) {
+    for (let i = h.daysBack - 1; i >= 0; i--) {
+      const day = addDays(today, -i);
+      const dow = day.getDay();
+      // weekends slightly less likely for run/stretch, more likely for read
+      let p = h.density;
+      if ((h.id === "h_run" || h.id === "h_stretch") && (dow === 0 || dow === 6)) p *= 0.65;
+      if (h.id === "h_read" && (dow === 0 || dow === 6)) p *= 1.1;
+      // recent week: nudge density up so the visible columns look alive
+      if (i < 7) p = Math.min(0.92, p + 0.1);
+      // today: 50/50 — leaves something for the tour user to imagine checking
+      if (i === 0 && rng() > 0.5) continue;
+      if (rng() < p) {
+        entries.push({
+          habit_id: h.id,
+          user_id: "mock",
+          entry_date: toISODate(day),
+          status: "done",
+          created_at: day.toISOString(),
+        });
+      }
+    }
+  }
+  return entries;
+}
+
 function seedEditorNotes() {
   return {
     [toISODate(startOfWeek(addDays(new Date(), -7)))]:
@@ -156,8 +203,8 @@ export function makeDemoState() {
     journal: seedJournal(),
     editor_notes: seedEditorNotes(),
     tasks: seedTasks(),
-    habits: [],
-    habit_entries: [],
+    habits: seedHabits(),
+    habit_entries: seedHabitEntries(),
     pomodoro: { enabled: false, work_min: 25, short_break_min: 5, long_break_min: 15, cycles_before_long: 4 },
     current: null,
     last_active_subject: "s_chem",
