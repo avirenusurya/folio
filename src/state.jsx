@@ -84,6 +84,7 @@ function buildStateFromDb({ profile, subjects, sessions, dDays, journal, editorN
       daily_seconds: profile.daily_goal_seconds,
       weekly_seconds: profile.weekly_goal_seconds,
       streak_freezes_available: profile.streak_freezes_available,
+      weekly_goal_mode: profile.weekly_goal_mode,
     },
     sessions: sessions || [],
     journal: Object.fromEntries((journal || []).map(j => [j.entry_date, j.content])),
@@ -499,6 +500,7 @@ export function FolioProvider({ children }) {
       if ('daily_seconds' in patch) dbPatch.daily_goal_seconds = patch.daily_seconds;
       if ('weekly_seconds' in patch) dbPatch.weekly_goal_seconds = patch.weekly_seconds;
       if ('streak_freezes_available' in patch) dbPatch.streak_freezes_available = patch.streak_freezes_available;
+      if ('weekly_goal_mode' in patch) dbPatch.weekly_goal_mode = patch.weekly_goal_mode;
       await mergeProfile(dbPatch);
       setState(p => p ? { ...p, goals: { ...p.goals, ...patch } } : p);
     },
