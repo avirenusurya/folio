@@ -55,9 +55,8 @@ export const IconSociety = (p) => (
 );
 export const IconHabits = (p) => (
   <svg viewBox="0 0 24 24" width={p.size || 22} height={p.size || 22} {...StrokeProps}>
-    <circle cx="5" cy="12" r="2.2" />
-    <circle cx="12" cy="12" r="2.2" />
-    <circle cx="19" cy="12" r="2.2" />
+    <rect x="4" y="4" width="16" height="16" rx="3" />
+    <path d="M8 12.5l2.8 2.8L16 9.5" />
   </svg>
 );
 export const IconJournal = (p) => (
