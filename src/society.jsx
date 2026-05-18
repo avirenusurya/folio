@@ -450,6 +450,10 @@ export function SocietyView({ onOpenMember }) {
   const [boardErr, setBoardErr] = React.useState(null);
   const [boardLoading, setBoardLoading] = React.useState(false);
   const [modal, setModal] = React.useState(null); // 'create' | 'join' | 'options' | null
+  const [inviteCopied, setInviteCopied] = React.useState(false);
+  const copyInvite = async (code) => {
+    try { await navigator.clipboard.writeText(code); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); } catch {}
+  };
 
   const shouldBroadcast = !!(
     user?.id &&
@@ -554,6 +558,25 @@ export function SocietyView({ onOpenMember }) {
                 </span>
               </>
             )}
+            <span>·</span>
+            <button
+              onClick={() => copyInvite(selectedGroup.invite_code)}
+              className="lift"
+              aria-label="copy invite code"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "4px 10px", borderRadius: 999,
+                background: "var(--surface-2, var(--surface))",
+                border: "1px solid rgba(110,90,71,0.2)",
+                color: "var(--ink-2)",
+              }}
+            >
+              <span className="smallcaps" style={{ fontSize: 9, color: "var(--ink-3)", letterSpacing: "0.18em" }}>code</span>
+              <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 15, letterSpacing: "0.22em", color: "var(--ink)" }}>{selectedGroup.invite_code}</span>
+              <span className="smallcaps" style={{ fontSize: 9, color: inviteCopied ? "var(--accent)" : "var(--ink-3)", letterSpacing: "0.18em" }}>
+                {inviteCopied ? "copied" : "copy"}
+              </span>
+            </button>
             <span>·</span>
             <button onClick={() => setModal('options')} className="smallcaps" style={{ color: "var(--ink-3)", fontSize: 10, padding: "2px 6px" }}>
               options
