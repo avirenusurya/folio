@@ -4,7 +4,7 @@
 
 Folio is a calm, single-page study companion that turns hours of focused work into something you can see and stay accountable to — a focus timer, a study heatmap, habit streaks, a private journal, and a social "Society" where you and your friends can see who's actually putting in the hours. Built with React and Supabase, it syncs across devices and runs entirely on a managed backend (no server to operate).
 
-> **Live demo:** _add link_ · Built by [Avirenu Surya](https://github.com/avirenusurya)
+> **[Live demo →](https://folio-kohl-one.vercel.app)**
 
 ---
 
